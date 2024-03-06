@@ -21,7 +21,7 @@ model User {
   // provider_id   String
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
-  deletedAt   DateTime
+  deletedAt   DateTime?
   userProfile UserProfile?
 }
 
@@ -29,7 +29,7 @@ model UserProfile {
   userId       Int    @id
   user         User   @relation(fields: [userId], references: [id])
   nickname     String @unique
-  profileImage String
+  profileImage String?
 }
 
 model Partner {
@@ -38,7 +38,7 @@ model Partner {
   password  String
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-  deletedAt DateTime
+  deletedAt DateTime?
   business  Business?
 }
 
