@@ -4,7 +4,7 @@ import { PrismaService } from 'src/db/prisma/prisma.service';
 import { InvalidPasswordException } from 'src/exceptions/InvalidPassword.exception';
 import { UserNotFoundByEmail } from 'src/exceptions/UserNotFoundByEmail.exception';
 import { AccountsService } from '../accounts.service';
-import { SignUpRequestDto } from './users.dto';
+import { SignInRequestDto, SignUpRequestDto } from './users.dto';
 
 @Injectable()
 export class UsersService {
@@ -42,7 +42,7 @@ export class UsersService {
     return accessToken;
   }
 
-  async signIn(dto: SignUpRequestDto) {
+  async signIn(dto: SignInRequestDto) {
     const { email, password } = dto;
 
     const user = await this.prismaService.user.findUnique({
@@ -53,7 +53,7 @@ export class UsersService {
     const isVerified = await compare(password, user.password);
     if (!isVerified) throw new InvalidPasswordException();
 
-    const accessToken = this.accountsService.generateAccessToken(user);
+    const accessToken = this.accountsService.generateAccessToken(user, 'user');
 
     return accessToken;
   }
