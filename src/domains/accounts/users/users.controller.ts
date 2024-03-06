@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post, Query, Res } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
-import { SignUpRequestDto } from './users.dto';
+import { SignInRequestDto, SignUpRequestDto } from './users.dto';
 import { UsersService } from './users.service';
 
 @Controller('accounts/users')
@@ -28,6 +28,24 @@ export class UsersController {
     @Res({ passthrough: true }) response: Response,
   ) {
     const accessToken = await this.usersService.signUp(dto);
+
+    response.cookie('accessToken', accessToken, {
+      domain: process.env.FRONT_SERVER,
+      secure: true,
+      httpOnly: true,
+      sameSite: 'none',
+      maxAge: this.maxAge,
+    });
+
+    return accessToken;
+  }
+
+  @Post('sign-in')
+  async signIn(
+    @Body() dto: SignInRequestDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const accessToken = await this.usersService.signIn(dto);
 
     response.cookie('accessToken', accessToken, {
       domain: process.env.FRONT_SERVER,
