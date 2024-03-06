@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { hash } from 'bcrypt';
+import { compare, hash } from 'bcrypt';
 import { PrismaService } from 'src/db/prisma/prisma.service';
+import { InvalidPasswordException } from 'src/exceptions/InvalidPassword.exception';
+import { PartnerNotFoundByEmail } from 'src/exceptions/PartnerNotFoundByEmail.exception';
 import { AccountsService } from '../accounts.service';
-import { SignUpRequestDto } from './partners.dto';
+import { SignInRequestDto, SignUpRequestDto } from './partners.dto';
 
 @Injectable()
 export class PartnersService {
@@ -52,6 +54,25 @@ export class PartnersService {
       },
       select: { id: true, email: true },
     });
+
+    const accessToken = this.accountsService.generateAccessToken(
+      partner,
+      'partner',
+    );
+
+    return accessToken;
+  }
+
+  async signIn(dto: SignInRequestDto) {
+    const { email, password } = dto;
+
+    const partner = await this.prismaService.partner.findUnique({
+      where: { email },
+    });
+    if (!partner) throw new PartnerNotFoundByEmail();
+
+    const isVerified = await compare(password, partner.password);
+    if (!isVerified) throw new InvalidPasswordException();
 
     const accessToken = this.accountsService.generateAccessToken(
       partner,
