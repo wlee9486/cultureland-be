@@ -37,7 +37,7 @@ export class UsersService {
       select: { id: true, email: true },
     });
 
-    const accessToken = this.accountsService.generateAccessToken(user);
+    const accessToken = this.accountsService.generateAccessToken(user, 'user');
 
     return accessToken;
   }
