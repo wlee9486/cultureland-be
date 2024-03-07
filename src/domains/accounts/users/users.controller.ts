@@ -55,6 +55,15 @@ export class UsersController {
       maxAge: this.maxAge,
     });
 
+    console.log(response);
+
     return accessToken;
+  }
+
+  @Post('sign-out')
+  async signOut(@Res({ passthrough: true }) response: Response) {
+    response.clearCookie('accessToken');
+
+    return 'successfuly signed out';
   }
 }
