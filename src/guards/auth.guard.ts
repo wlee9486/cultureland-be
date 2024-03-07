@@ -1,15 +1,12 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { JwtPayload, verify } from 'jsonwebtoken';
 import { PrismaService } from 'src/db/prisma/prisma.service';
 import { AccountType } from 'src/domains/accounts/accounts.type';
+import { TokenNotFoundException } from 'src/exceptions/TokenNotFound.exception';
+import { TokenVerificationException } from 'src/exceptions/TokenVerification.exception';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -33,7 +30,7 @@ export class AuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<Request>();
 
     const accessToken = this.extractTokenFromCookie(request);
-    if (!accessToken) throw new UnauthorizedException();
+    if (!accessToken) throw new TokenNotFoundException();
 
     try {
       const secretKey = this.configService.getOrThrow<string>('JWT_SECRET_KEY');
@@ -43,9 +40,7 @@ export class AuthGuard implements CanActivate {
       ) as JwtPayload & AccountType;
 
       if (accountTypeInAccessToken !== accountTypeinDecorator)
-        ///////
         throw new Error();
-      ///////
 
       if (accountTypeinDecorator.includes('user')) {
         const user = await this.prismaService.user.findUniqueOrThrow({
@@ -54,8 +49,7 @@ export class AuthGuard implements CanActivate {
         request.user = user;
       }
     } catch {
-      ///////
-      throw new UnauthorizedException();
+      throw new TokenVerificationException();
     }
     return true;
   }
