@@ -14,21 +14,23 @@ datasource db {
 }
 
 model User {
-  id          Int          @id @default(autoincrement())
-  email       String       @unique
-  password    String
+  id              Int              @id @default(autoincrement())
+  email           String           @unique
+  password        String
   // provider_type
   // provider_id   String
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  deletedAt   DateTime?
-  userProfile UserProfile?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  deletedAt       DateTime?
+  userProfile     UserProfile?
+  reviews         Review[]
+  reviewReactions ReviewReaction[]
 }
 
 model UserProfile {
-  userId       Int    @id
-  user         User   @relation(fields: [userId], references: [id])
-  nickname     String @unique
+  userId       Int     @id
+  user         User    @relation(fields: [userId], references: [id])
+  nickname     String  @unique
   profileImage String?
 }
 
@@ -52,4 +54,33 @@ model Business {
   address        String
   bankName       String
   bankAccount    String
+}
+
+model Review {
+  id              Int              @id @default(autoincrement())
+  reviewer        User             @relation(fields: [reviewerId], references: [id])
+  reviewerId      Int
+  // event
+  eventId         Int
+  imageUrl        String
+  isVerified      Boolean          @default(false)
+  rating          Int
+  content         String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  deletedAt       DateTime?
+  reviewReactions ReviewReaction[]
+}
+
+model ReviewReaction {
+  user          User      @relation(fields: [userId], references: [id])
+  userId        Int
+  review        Review    @relation(fields: [reviewId], references: [id])
+  reviewId      Int
+  reactionValue Int
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  @@id([userId, reviewId])
 }
