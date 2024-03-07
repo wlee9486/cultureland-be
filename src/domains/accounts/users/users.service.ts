@@ -32,7 +32,9 @@ export class UsersService {
       data: {
         email,
         password: encryptedPassword,
-        userProfile: { create: { nickname: initialNickname } },
+        userProfile: {
+          create: { nickname: initialNickname, profileImage: null },
+        },
       },
       select: { id: true, email: true },
     });
