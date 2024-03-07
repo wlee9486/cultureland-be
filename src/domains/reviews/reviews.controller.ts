@@ -1,4 +1,12 @@
-import { Body, Controller, Post, Req, UploadedFile } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Req,
+  UploadedFile,
+} from '@nestjs/common';
 import { User } from '@prisma/client';
 import { Request } from 'express';
 import { Private } from 'src/decorators/private.decorator';
@@ -19,5 +27,10 @@ export class ReviewsController {
     const user: User = req.user;
 
     return await this.reviewsService.createReview(user, dto, image);
+  }
+
+  @Get()
+  getEventReviews(@Query('eventId') eventId: string) {
+    return this.reviewsService.getEventReviews(eventId);
   }
 }

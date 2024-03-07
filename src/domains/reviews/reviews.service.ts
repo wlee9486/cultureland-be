@@ -4,7 +4,7 @@ import { writeFile } from 'fs/promises';
 import { nanoid } from 'nanoid';
 import { join } from 'path';
 import { PrismaService } from 'src/db/prisma/prisma.service';
-import { CreateReviewRequestDto } from './reviews.dto';
+import { CreateReviewRequestDto, ReviewWithReactions } from './reviews.dto';
 
 @Injectable()
 export class ReviewsService {
@@ -24,6 +24,49 @@ export class ReviewsService {
     });
 
     return review;
+  }
+
+  async getEventReviews(eventId: string) {
+    const reviews = await this.prismaService.review.findMany({
+      where: { eventId: Number(eventId) },
+      select: {
+        id: true,
+        reviewerId: true,
+        eventId: true,
+        imageUrl: true,
+        rating: true,
+        content: true,
+        reviewReactions: {
+          select: {
+            userId: true,
+            reviewId: true,
+            reactionValue: true,
+          },
+          where: {
+            OR: [{ reactionValue: 1 }, { reactionValue: -1 }],
+          },
+        },
+      },
+    });
+
+    const reviewsWithReactionCounts = this.countReactions(reviews);
+
+    return reviewsWithReactionCounts;
+  }
+
+  countReactions(reviews: ReviewWithReactions[]) {
+    const likes = reviews.filter((review) =>
+      review.reviewReactions.some((reaction) => reaction.reactionValue === 1),
+    ).length;
+    const hates = reviews.filter((review) =>
+      review.reviewReactions.some((reaction) => reaction.reactionValue === -1),
+    ).length;
+
+    return reviews.map((review) => ({
+      ...review,
+      likes,
+      hates,
+    }));
   }
 
   async createImageFile(file: Express.Multer.File) {
