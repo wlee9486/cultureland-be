@@ -60,7 +60,12 @@ export class PartnersController {
 
   @Post('sign-out')
   async signOut(@Res({ passthrough: true }) response: Response) {
-    response.clearCookie('accessToken');
+    response.clearCookie('accessToken', {
+      domain: process.env.FRONT_SERVER,
+      secure: true,
+      httpOnly: true,
+      sameSite: 'none',
+    });
 
     return 'successfuly signed out';
   }
