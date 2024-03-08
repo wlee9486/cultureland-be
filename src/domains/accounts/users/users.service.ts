@@ -36,10 +36,15 @@ export class UsersService {
           create: { nickname: initialNickname, profileImage: null },
         },
       },
-      select: { id: true, email: true },
+      include: { userProfile: true },
     });
 
-    const accessToken = this.accountsService.generateAccessToken(user, 'user');
+    const { userProfile } = user;
+
+    const accessToken = this.accountsService.generateAccessToken(
+      userProfile,
+      'user',
+    );
 
     return accessToken;
   }
@@ -49,13 +54,19 @@ export class UsersService {
 
     const user = await this.prismaService.user.findUnique({
       where: { email },
+      include: { userProfile: true },
     });
     if (!user) throw new UserNotFoundByEmail();
 
     const isVerified = await compare(password, user.password);
     if (!isVerified) throw new InvalidPasswordException();
 
-    const accessToken = this.accountsService.generateAccessToken(user, 'user');
+    const { userProfile } = user;
+
+    const accessToken = this.accountsService.generateAccessToken(
+      userProfile,
+      'user',
+    );
 
     return accessToken;
   }
