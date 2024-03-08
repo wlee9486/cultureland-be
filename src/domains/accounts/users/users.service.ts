@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { User } from '@prisma/client';
 import { compare, hash } from 'bcrypt';
 import { PrismaService } from 'src/db/prisma/prisma.service';
 import { InvalidPasswordException } from 'src/exceptions/InvalidPassword.exception';
@@ -36,27 +37,42 @@ export class UsersService {
           create: { nickname: initialNickname, profileImage: null },
         },
       },
-      select: { id: true, email: true },
+      include: { userProfile: true },
     });
 
-    const accessToken = this.accountsService.generateAccessToken(user, 'user');
+    const { userProfile } = user;
 
-    return accessToken;
+    return this.accountsService.generateAccessToken(userProfile, 'user');
   }
 
   async signIn(dto: SignInRequestDto) {
     const { email, password } = dto;
 
+    const foundUser = await this.findUserByEmail(email);
+
+    const isVerified = await compare(password, foundUser.password);
+    if (!isVerified) throw new InvalidPasswordException();
+
+    const { userProfile } = foundUser;
+
+    return this.accountsService.generateAccessToken(userProfile, 'user');
+  }
+
+  async refreshToken(user: User) {
+    const foundUser = await this.findUserByEmail(user.email);
+
+    const { userProfile } = foundUser;
+
+    return this.accountsService.generateAccessToken(userProfile, 'user');
+  }
+
+  async findUserByEmail(email: string) {
     const user = await this.prismaService.user.findUnique({
       where: { email },
+      include: { userProfile: true },
     });
     if (!user) throw new UserNotFoundByEmail();
 
-    const isVerified = await compare(password, user.password);
-    if (!isVerified) throw new InvalidPasswordException();
-
-    const accessToken = this.accountsService.generateAccessToken(user, 'user');
-
-    return accessToken;
+    return user;
   }
 }
