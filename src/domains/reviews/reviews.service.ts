@@ -7,7 +7,9 @@ import { PrismaService } from 'src/db/prisma/prisma.service';
 import {
   CreateReactionRequestDto,
   CreateReviewRequestDto,
-  ReviewWithReactions,
+  ReviewResponseDto,
+  ReviewWithReactionsType,
+  SortOrder,
 } from './reviews.dto';
 
 @Injectable()
@@ -29,21 +31,35 @@ export class ReviewsService {
         eventId: Number(eventId),
         rating: Number(rating),
         content,
-        imageUrl,
+        image: imageUrl,
       },
     });
 
     return review;
   }
 
-  async getEventReviews(eventId: string) {
+  async createImageFile(file: Express.Multer.File) {
+    const data = file.buffer;
+
+    const basePath = join(__dirname, '../../../public/images');
+    const fileNameBase = nanoid();
+    const extension = file.originalname.split('.').splice(-1);
+    const fileName = `${fileNameBase}.${extension}`;
+    const path = join(basePath, fileName);
+
+    await writeFile(path, data);
+
+    return fileName;
+  }
+
+  async getEventReviews(eventId: string, orderBy: SortOrder) {
     const reviews = await this.prismaService.review.findMany({
       where: { eventId: Number(eventId) },
       select: {
         id: true,
         reviewerId: true,
         eventId: true,
-        imageUrl: true,
+        image: true,
         rating: true,
         content: true,
         createdAt: true,
@@ -55,11 +71,30 @@ export class ReviewsService {
           },
         },
       },
+      orderBy: { createdAt: 'desc' },
     });
 
     const reviewsWithReactionCounts = this.countReactions(reviews);
 
-    return reviewsWithReactionCounts;
+    if (!orderBy || orderBy === 'recent') {
+      return reviewsWithReactionCounts;
+    } else if (orderBy === 'likes') {
+      return reviewsWithReactionCounts.sort((a, b) => b.likes - a.likes);
+    } else {
+      return reviewsWithReactionCounts.sort((a, b) => b.hates - a.hates);
+    }
+  }
+
+  countReactions(reviews: ReviewWithReactionsType[]): ReviewResponseDto[] {
+    return reviews.map((review) => ({
+      ...review,
+      likes: review.reviewReactions.filter(
+        (reaction) => reaction.reactionValue === 1,
+      ).length,
+      hates: review.reviewReactions.filter(
+        (reaction) => reaction.reactionValue === -1,
+      ).length,
+    }));
   }
 
   async getFamousReviews() {
@@ -107,34 +142,5 @@ export class ReviewsService {
     });
 
     return reviewId;
-  }
-
-  countReactions(reviews: ReviewWithReactions[]) {
-    const likes = reviews.filter((review) =>
-      review.reviewReactions.some((reaction) => reaction.reactionValue === 1),
-    ).length;
-    const hates = reviews.filter((review) =>
-      review.reviewReactions.some((reaction) => reaction.reactionValue === -1),
-    ).length;
-
-    return reviews.map((review) => ({
-      ...review,
-      likes,
-      hates,
-    }));
-  }
-
-  async createImageFile(file: Express.Multer.File) {
-    const data = file.buffer;
-
-    const basePath = join(__dirname, '../../../public/images');
-    const fileNameBase = nanoid();
-    const extension = file.originalname.split('.').splice(-1);
-    const fileName = `${fileNameBase}.${extension}`;
-    const path = join(basePath, fileName);
-
-    await writeFile(path, data);
-
-    return fileName;
   }
 }

@@ -18,6 +18,7 @@ import { Private } from 'src/decorators/private.decorator';
 import {
   CreateReactionRequestDto,
   CreateReviewRequestDto,
+  SortOrder,
 } from './reviews.dto';
 import { ReviewsService } from './reviews.service';
 
@@ -39,8 +40,11 @@ export class ReviewsController {
   }
 
   @Get()
-  async getEventReviews(@Query('eventId') eventId: string) {
-    return await this.reviewsService.getEventReviews(eventId);
+  async getEventReviews(
+    @Query('eventId') eventId: string,
+    @Query('orderBy') orderBy?: SortOrder,
+  ) {
+    return await this.reviewsService.getEventReviews(eventId, orderBy);
   }
 
   @Post(':reviewId/reactions')
