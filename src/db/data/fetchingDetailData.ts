@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import transformedEvents from './transFormedData/transformedEventsData.json';
-import transformedVenues from './transFormedData/transformedVenuesData.json';
+const transformedEvents = require('./transFormedData/transformedEventsData.json');
+const transformedVenues = require('./transFormedData/transformedVenuesData.json');
 
 const xml2js = require('xml2js');
 

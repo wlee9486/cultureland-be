@@ -1,5 +1,5 @@
-import eventsData from '../data/detailData/detailEvents.json';
-import venueData from '../data/detailData/detailVenues.json';
+const eventsData = require('../data/detailData/detailEvents.json');
+const venueData = require('../data/detailData/detailVenues.json');
 
 console.log(
   `venue length by id : ${JSON.stringify(venueData).split('mt10id').length - 1}`,
