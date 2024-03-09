@@ -138,6 +138,14 @@ export class ReviewsService {
     return foundReview;
   }
 
+  async getUsersReviews(userId: number) {
+    const reviews = await this.prismaService.review.findMany({
+      where: { reviewerId: userId },
+    });
+
+    return reviews;
+  }
+
   async getEventReviews(eventId: string, orderBy: SortOrder) {
     const reviews = await this.prismaService.review.findMany({
       where: { eventId: Number(eventId) },
