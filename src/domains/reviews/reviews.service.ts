@@ -4,7 +4,11 @@ import { writeFile } from 'fs/promises';
 import { nanoid } from 'nanoid';
 import { join } from 'path';
 import { PrismaService } from 'src/db/prisma/prisma.service';
-import { CreateReviewRequestDto, ReviewWithReactions } from './reviews.dto';
+import {
+  CreateReactionRequestDto,
+  CreateReviewRequestDto,
+  ReviewWithReactions,
+} from './reviews.dto';
 
 @Injectable()
 export class ReviewsService {
@@ -20,7 +24,13 @@ export class ReviewsService {
     const imageUrl = await this.createImageFile(image);
 
     const review = await this.prismaService.review.create({
-      data: { reviewerId: userId, eventId, rating, content, imageUrl },
+      data: {
+        reviewerId: userId,
+        eventId: Number(eventId),
+        rating: Number(rating),
+        content,
+        imageUrl,
+      },
     });
 
     return review;
@@ -36,14 +46,12 @@ export class ReviewsService {
         imageUrl: true,
         rating: true,
         content: true,
+        createdAt: true,
         reviewReactions: {
           select: {
             userId: true,
             reviewId: true,
             reactionValue: true,
-          },
-          where: {
-            OR: [{ reactionValue: 1 }, { reactionValue: -1 }],
           },
         },
       },
@@ -52,6 +60,20 @@ export class ReviewsService {
     const reviewsWithReactionCounts = this.countReactions(reviews);
 
     return reviewsWithReactionCounts;
+  }
+
+  async createReaction(
+    user: User,
+    reviewId: number,
+    dto: CreateReactionRequestDto,
+  ) {
+    const { reactionValue } = dto;
+
+    const reviewReaction = await this.prismaService.reviewReaction.create({
+      data: { userId: user.id, reviewId, reactionValue },
+    });
+
+    return reviewReaction;
   }
 
   countReactions(reviews: ReviewWithReactions[]) {
@@ -72,7 +94,7 @@ export class ReviewsService {
   async createImageFile(file: Express.Multer.File) {
     const data = file.buffer;
 
-    const basePath = join(__dirname, '/../public/images');
+    const basePath = join(__dirname, '../../../public/images');
     const fileNameBase = nanoid();
     const extension = file.originalname.split('.').splice(-1);
     const fileName = `${fileNameBase}.${extension}`;
