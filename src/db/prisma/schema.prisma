@@ -34,7 +34,7 @@ model UserProfile {
   userId       Int    @id
   user         User   @relation(fields: [userId], references: [id])
   nickname     String @unique
-  profileImage String
+  profileImage String?
 }
 
 model Partner {
