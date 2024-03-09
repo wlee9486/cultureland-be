@@ -1,9 +1,15 @@
+import {
+  ObjectCannedACL,
+  PutObjectCommand,
+  PutObjectCommandInput,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { User } from '@prisma/client';
-import { writeFile } from 'fs/promises';
-import { nanoid } from 'nanoid';
-import { join } from 'path';
 import { PrismaService } from 'src/db/prisma/prisma.service';
+import { FailedToUploadFileException } from 'src/exceptions/FailedToUploadFile.exception';
+import { UploadedFileNotFoundError } from 'src/exceptions/UploadedFileNotFoundError.exception';
 import {
   CreateReactionRequestDto,
   CreateReviewRequestDto,
@@ -14,16 +20,20 @@ import {
 
 @Injectable()
 export class ReviewsService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly prismaService: PrismaService,
+  ) {}
 
   async createReview(
     user: User,
     dto: CreateReviewRequestDto,
-    image: Express.Multer.File,
+    imageFile: Express.Multer.File,
   ) {
     const { eventId, rating, content } = dto;
     const userId = user.id;
-    const imageUrl = await this.createImageFile(image);
+    const image = await this.uploadImgToS3(imageFile);
+    if (!image) throw new UploadedFileNotFoundError();
 
     const review = await this.prismaService.review.create({
       data: {
@@ -31,25 +41,40 @@ export class ReviewsService {
         eventId: Number(eventId),
         rating: Number(rating),
         content,
-        image: imageUrl,
+        image,
       },
     });
 
     return review;
   }
 
-  async createImageFile(file: Express.Multer.File) {
-    const data = file.buffer;
+  async uploadImgToS3(file: Express.Multer.File) {
+    if (!file) return undefined;
 
-    const basePath = join(__dirname, '../../../public/images');
-    const fileNameBase = nanoid();
-    const extension = file.originalname.split('.').splice(-1);
-    const fileName = `${fileNameBase}.${extension}`;
-    const path = join(basePath, fileName);
+    const awsRegion = this.configService.getOrThrow('AWS_REGION');
+    const bucketName = this.configService.getOrThrow('AWS_S3_BUCKET_NAME');
+    const client = new S3Client({
+      region: awsRegion,
+      credentials: {
+        accessKeyId: this.configService.getOrThrow('AWS_ACCESS_KEY'),
+        secretAccessKey: this.configService.getOrThrow('AWS_SECRET_KEY'),
+      },
+    });
+    const key = `cultureland/review/${Date.now().toString()}-${file.originalname}`;
+    const params: PutObjectCommandInput = {
+      Key: key,
+      Body: file.buffer,
+      Bucket: bucketName,
+      ACL: ObjectCannedACL.public_read,
+    };
+    const command = new PutObjectCommand(params);
 
-    await writeFile(path, data);
+    const uploadFileS3 = await client.send(command);
 
-    return fileName;
+    if (uploadFileS3.$metadata.httpStatusCode !== 200)
+      throw new FailedToUploadFileException();
+    const imgUrl = `${key}`;
+    return imgUrl;
   }
 
   async getEventReviews(eventId: string, orderBy: SortOrder) {
