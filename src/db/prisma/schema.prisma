@@ -14,9 +14,9 @@ datasource db {
 }
 
 model User {
-  id              Int              @id @default(autoincrement())
-  email           String           @unique
-  password        String
+  id                  Int                  @id @default(autoincrement())
+  email               String               @unique
+  password            String
   // provider_type
   // provider_id   String
   createdAt       DateTime         @default(now())
@@ -25,13 +25,16 @@ model User {
   userProfile     UserProfile?
   reviews         Review[]
   reviewReactions ReviewReaction[]
+  followings      Follow[]         @relation("Followings")
+  followers       Follow[]         @relation("Followers")
+  userEvents UserEvents[]
 }
 
 model UserProfile {
-  userId       Int     @id
-  user         User    @relation(fields: [userId], references: [id])
-  nickname     String  @unique
-  profileImage String?
+  userId       Int    @id
+  user         User   @relation(fields: [userId], references: [id])
+  nickname     String @unique
+  profileImage String
 }
 
 model Partner {
@@ -62,14 +65,15 @@ model Review {
   reviewerId      Int
   // event
   eventId         Int
-  imageUrl        String
-  isVerified      Boolean          @default(false)
+  image           String
   rating          Int
   content         String
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   deletedAt       DateTime?
   reviewReactions ReviewReaction[]
+
+  @@unique([reviewerId, eventId])
 }
 
 model ReviewReaction {
@@ -83,4 +87,24 @@ model ReviewReaction {
   deletedAt     DateTime?
 
   @@id([userId, reviewId])
+}
+
+model Follow {
+  follower    User @relation("Followers", fields: [followerId], references: [id])
+  followerId  Int
+  following   User @relation("Followings", fields: [followingId], references: [id])
+  followingId Int
+
+  @@id([followerId, followingId])
+}
+
+model UserEvents {
+  user         User    @relation(fields: [userId], references: [id])
+  userId       Int
+  // event
+  eventId      Int
+  isVerified   Boolean @default(false)
+  receiptImage String
+
+  @@id([userId, eventId])
 }

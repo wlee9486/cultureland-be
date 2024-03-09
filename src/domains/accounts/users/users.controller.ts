@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Post, Query, Res } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Req, Res } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { SignInRequestDto, SignUpRequestDto } from './users.dto';
 import { UsersService } from './users.service';
 
@@ -55,8 +55,6 @@ export class UsersController {
       maxAge: this.maxAge,
     });
 
-    console.log(response);
-
     return accessToken;
   }
 
@@ -69,6 +67,26 @@ export class UsersController {
       sameSite: 'none',
     });
 
-    return 'successfuly signed out';
+    return 'successfully signed out';
+  }
+
+  @Post('refresh-token')
+  async refreshToken(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    if (request.user!) return;
+
+    const accessToken = await this.usersService.refreshToken(request.user);
+
+    response.cookie('accessToken', accessToken, {
+      domain: process.env.FRONT_SERVER,
+      secure: true,
+      httpOnly: true,
+      sameSite: 'none',
+      maxAge: this.maxAge,
+    });
+
+    return accessToken;
   }
 }
