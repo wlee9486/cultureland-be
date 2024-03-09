@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -17,7 +18,6 @@ import { Private } from 'src/decorators/private.decorator';
 import {
   CreateReactionRequestDto,
   CreateReviewRequestDto,
-  SortOrder,
 } from './reviews.dto';
 import { ReviewsService } from './reviews.service';
 
@@ -39,11 +39,8 @@ export class ReviewsController {
   }
 
   @Get()
-  async getEventReviews(
-    @Query('eventId') eventId: string,
-    @Query('orderBy') orderBy?: SortOrder,
-  ) {
-    return await this.reviewsService.getEventReviews(eventId, orderBy);
+  async getEventReviews(@Query('eventId') eventId: string) {
+    return await this.reviewsService.getEventReviews(eventId);
   }
 
   @Post(':reviewId/reactions')
@@ -56,5 +53,16 @@ export class ReviewsController {
     const user: User = req.user;
 
     return await this.reviewsService.createReaction(user, reviewId, dto);
+  }
+
+  @Delete(':reviewId/reactions')
+  @Private('user')
+  async deleteReaction(
+    @Req() req: Request,
+    @Param('reviewId', ParseIntPipe) reviewId: number,
+  ) {
+    const user: User = req.user;
+
+    return await this.reviewsService.deleteReaction(user, reviewId);
   }
 }

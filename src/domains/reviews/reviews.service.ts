@@ -76,6 +76,19 @@ export class ReviewsService {
     return reviewReaction;
   }
 
+  async deleteReaction(user: User, reviewId: number) {
+    await this.prismaService.reviewReaction.delete({
+      where: {
+        userId_reviewId: {
+          userId: user.id,
+          reviewId: reviewId,
+        },
+      },
+    });
+
+    return reviewId;
+  }
+
   countReactions(reviews: ReviewWithReactions[]) {
     const likes = reviews.filter((review) =>
       review.reviewReactions.some((reaction) => reaction.reactionValue === 1),
