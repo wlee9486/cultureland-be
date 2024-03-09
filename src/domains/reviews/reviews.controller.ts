@@ -71,6 +71,14 @@ export class ReviewsController {
   }
 
   @Get()
+  async getUsersReviews(
+    @Req() req: Request,
+    @Query('userId', ParseIntPipe) userId: number,
+  ) {
+    return await this.reviewsService.getUsersReviews(userId);
+  }
+
+  @Get()
   async getEventReviews(
     @Query('eventId') eventId: string,
     @Query('orderBy') orderBy?: SortOrder,
