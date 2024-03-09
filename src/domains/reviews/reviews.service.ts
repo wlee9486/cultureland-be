@@ -10,6 +10,7 @@ import { User } from '@prisma/client';
 import { nanoid } from 'nanoid';
 import { PrismaService } from 'src/db/prisma/prisma.service';
 import { FailedToUploadFileException } from 'src/exceptions/FailedToUploadFile.exception';
+import { PermissionDeniedException } from 'src/exceptions/PermissionDenied.exception';
 import { ReviewNotFoundById } from 'src/exceptions/ReviewNotFoundById.exception';
 import { UploadedFileNotFoundError } from 'src/exceptions/UploadedFileNotFoundError.exception';
 import {
@@ -61,11 +62,10 @@ export class ReviewsService {
     const image = await this.uploadImgToS3(imageFile);
     if (!image) throw new UploadedFileNotFoundError();
 
-    console.log(reviewId);
-    const foundReview = await this.prismaService.review.findUnique({
-      where: { id: reviewId },
-    });
+    const foundReview = await this.findUniqueReview(reviewId);
     if (!foundReview) return new ReviewNotFoundById();
+    if (userId !== foundReview.reviewerId)
+      throw new PermissionDeniedException();
 
     const updatedReview = await this.prismaService.review.update({
       where: { id: reviewId },
@@ -79,6 +79,21 @@ export class ReviewsService {
     });
 
     return updatedReview;
+  }
+
+  async deleteReview(user: User, reviewId: number) {
+    const userId = user.id;
+
+    const foundReview = await this.findUniqueReview(reviewId);
+    if (!foundReview) return new ReviewNotFoundById();
+    if (userId !== foundReview.reviewerId)
+      throw new PermissionDeniedException();
+
+    await this.prismaService.review.delete({
+      where: { id: reviewId },
+    });
+
+    return reviewId;
   }
 
   async uploadImgToS3(file: Express.Multer.File) {
@@ -113,6 +128,14 @@ export class ReviewsService {
       throw new FailedToUploadFileException();
     const imgUrl = `${key}`;
     return imgUrl;
+  }
+
+  async findUniqueReview(reviewId: number) {
+    const foundReview = await this.prismaService.review.findUnique({
+      where: { id: reviewId },
+    });
+
+    return foundReview;
   }
 
   async getEventReviews(eventId: string, orderBy: SortOrder) {

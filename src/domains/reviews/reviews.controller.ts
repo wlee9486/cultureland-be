@@ -57,6 +57,19 @@ export class ReviewsController {
     return await this.reviewsService.updateReview(user, reviewId, dto, image);
   }
 
+  @Delete(':reviewId')
+  @Private('user')
+  @UseInterceptors(FileInterceptor('image'))
+  async deleteReview(
+    @Req() req: Request,
+    @Param('reviewId', ParseIntPipe)
+    reviewId: number,
+  ) {
+    const user: User = req.user;
+
+    return await this.reviewsService.deleteReview(user, reviewId);
+  }
+
   @Get()
   async getEventReviews(
     @Query('eventId') eventId: string,
