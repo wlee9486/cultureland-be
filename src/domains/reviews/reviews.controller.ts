@@ -6,6 +6,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Put,
   Query,
   Req,
   UploadedFile,
@@ -19,6 +20,7 @@ import {
   CreateReactionRequestDto,
   CreateReviewRequestDto,
   SortOrder,
+  UpdateReviewRequestDto,
 } from './reviews.dto';
 import { ReviewsService } from './reviews.service';
 
@@ -37,6 +39,22 @@ export class ReviewsController {
     const user: User = req.user;
 
     return await this.reviewsService.createReview(user, dto, image);
+  }
+
+  @Put(':reviewId')
+  @Private('user')
+  @UseInterceptors(FileInterceptor('image'))
+  async updateReview(
+    @Req() req: Request,
+    @Param('reviewId', ParseIntPipe)
+    reviewId: number,
+    @Body()
+    dto: UpdateReviewRequestDto,
+    @UploadedFile() image: Express.Multer.File,
+  ) {
+    const user: User = req.user;
+
+    return await this.reviewsService.updateReview(user, reviewId, dto, image);
   }
 
   @Get()
