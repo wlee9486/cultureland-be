@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import events from './dataList/events.json';
-import venue from './dataList/venues.json';
+const events = require('./dataList/events.json');
+const venue = require('./dataList/venues.json');
 
 const directoryPath = path.join(__dirname, './transFormedData');
 
