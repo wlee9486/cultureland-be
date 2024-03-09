@@ -14,9 +14,9 @@ datasource db {
 }
 
 model User {
-  id              Int              @id @default(autoincrement())
-  email           String           @unique
-  password        String
+  id                  Int                  @id @default(autoincrement())
+  email               String               @unique
+  password            String
   // provider_type
   // provider_id   String
   createdAt       DateTime         @default(now())
@@ -27,14 +27,14 @@ model User {
   reviewReactions ReviewReaction[]
   followings      Follow[]         @relation("Followings")
   followers       Follow[]         @relation("Followers")
-  UserEvents      UserEvents[]
+  userEvents UserEvents[]
 }
 
 model UserProfile {
-  userId       Int     @id
-  user         User    @relation(fields: [userId], references: [id])
-  nickname     String  @unique
-  profileImage String?
+  userId       Int    @id
+  user         User   @relation(fields: [userId], references: [id])
+  nickname     String @unique
+  profileImage String
 }
 
 model Partner {
@@ -72,6 +72,8 @@ model Review {
   updatedAt       DateTime         @updatedAt
   deletedAt       DateTime?
   reviewReactions ReviewReaction[]
+
+  @@unique([reviewerId, eventId])
 }
 
 model ReviewReaction {
