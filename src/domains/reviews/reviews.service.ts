@@ -7,8 +7,11 @@ import {
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { User } from '@prisma/client';
+import { nanoid } from 'nanoid';
 import { PrismaService } from 'src/db/prisma/prisma.service';
 import { FailedToUploadFileException } from 'src/exceptions/FailedToUploadFile.exception';
+import { PermissionDeniedException } from 'src/exceptions/PermissionDenied.exception';
+import { ReviewNotFoundById } from 'src/exceptions/ReviewNotFoundById.exception';
 import { UploadedFileNotFoundError } from 'src/exceptions/UploadedFileNotFoundError.exception';
 import {
   CreateReactionRequestDto,
@@ -48,8 +51,57 @@ export class ReviewsService {
     return review;
   }
 
+  async updateReview(
+    user: User,
+    reviewId: number,
+    dto: CreateReviewRequestDto,
+    imageFile: Express.Multer.File,
+  ) {
+    const { eventId, rating, content } = dto;
+    const userId = user.id;
+    const image = await this.uploadImgToS3(imageFile);
+    if (!image) throw new UploadedFileNotFoundError();
+
+    const foundReview = await this.findUniqueReview(reviewId);
+    if (!foundReview) return new ReviewNotFoundById();
+    if (userId !== foundReview.reviewerId)
+      throw new PermissionDeniedException();
+
+    const updatedReview = await this.prismaService.review.update({
+      where: { id: reviewId },
+      data: {
+        reviewerId: userId,
+        eventId: Number(eventId),
+        rating: Number(rating),
+        content,
+        image,
+      },
+    });
+
+    return updatedReview;
+  }
+
+  async deleteReview(user: User, reviewId: number) {
+    const userId = user.id;
+
+    const foundReview = await this.findUniqueReview(reviewId);
+    if (!foundReview) return new ReviewNotFoundById();
+    if (userId !== foundReview.reviewerId)
+      throw new PermissionDeniedException();
+
+    await this.prismaService.review.delete({
+      where: { id: reviewId },
+    });
+
+    return reviewId;
+  }
+
   async uploadImgToS3(file: Express.Multer.File) {
     if (!file) return undefined;
+
+    const fileNameBase = nanoid();
+    const extension = file.originalname.split('.').splice(-1);
+    const fileName = `${fileNameBase}.${extension}`;
 
     const awsRegion = this.configService.getOrThrow('AWS_REGION');
     const bucketName = this.configService.getOrThrow('AWS_S3_BUCKET_NAME');
@@ -60,7 +112,8 @@ export class ReviewsService {
         secretAccessKey: this.configService.getOrThrow('AWS_SECRET_KEY'),
       },
     });
-    const key = `cultureland/review/${Date.now().toString()}-${file.originalname}`;
+
+    const key = `cultureland/review/${Date.now().toString()}-${fileName}`;
     const params: PutObjectCommandInput = {
       Key: key,
       Body: file.buffer,
@@ -75,6 +128,14 @@ export class ReviewsService {
       throw new FailedToUploadFileException();
     const imgUrl = `${key}`;
     return imgUrl;
+  }
+
+  async findUniqueReview(reviewId: number) {
+    const foundReview = await this.prismaService.review.findUnique({
+      where: { id: reviewId },
+    });
+
+    return foundReview;
   }
 
   async getEventReviews(eventId: string, orderBy: SortOrder) {

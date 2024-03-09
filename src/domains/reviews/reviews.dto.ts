@@ -15,6 +15,8 @@ export class CreateReviewRequestDto {
   content: string;
 }
 
+export class UpdateReviewRequestDto extends CreateReviewRequestDto {}
+
 export type ReviewWithReactionsType = Prisma.ReviewGetPayload<{
   select: {
     id: true;
