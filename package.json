@@ -18,7 +18,12 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "getApiData": "npm run fetchingApiData && npm run transFormingApiData && npm run fetchingDetailData && npm run countDataLength",
+    "fetchingApiData": "ts-node ./src/db/data/fetchingData.ts",
+    "transFormingApiData": "ts-node  ./src/db/data/transformingData.ts",
+    "fetchingDetailData": "ts-node ./src/db/data/fetchingDetailData.ts",
+    "countDataLength": "ts-node ./src/db/data/cnt.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
@@ -33,7 +38,8 @@
     "cross-env": "^7.0.3",
     "jsonwebtoken": "^9.0.2",
     "reflect-metadata": "^0.2.0",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
