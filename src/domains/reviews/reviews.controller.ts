@@ -65,4 +65,9 @@ export class ReviewsController {
 
     return await this.reviewsService.deleteReaction(user, reviewId);
   }
+
+  @Get('famous')
+  async getFamousReviews() {
+    return await this.reviewsService.getFamousReviews();
+  }
 }

@@ -62,6 +62,26 @@ export class ReviewsService {
     return reviewsWithReactionCounts;
   }
 
+  async getFamousReviews() {
+    const reviews = await this.prismaService.review.findMany({
+      include: {
+        reviewReactions: {
+          where: {
+            reactionValue: 1,
+          },
+        },
+      },
+      orderBy: {
+        reviewReactions: {
+          _count: 'desc',
+        },
+      },
+      take: 10,
+    });
+
+    return reviews;
+  }
+
   async createReaction(
     user: User,
     reviewId: number,
