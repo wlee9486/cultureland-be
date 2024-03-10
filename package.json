@@ -38,6 +38,7 @@
     "class-validator": "^0.14.1",
     "cookie-parser": "^1.4.6",
     "cross-env": "^7.0.3",
+    "dayjs": "^1.11.10",
     "jsonwebtoken": "^9.0.2",
     "nanoid": "^3.0.0",
     "reflect-metadata": "^0.2.0",
@@ -90,6 +91,7 @@
     "testEnvironment": "node"
   },
   "prisma": {
-    "schema": "./src/db/prisma/schema.prisma"
+    "schema": "./src/db/prisma/schema.prisma",
+    "seed": "ts-node ./src/db/prisma/seedAll.ts"
   }
 }
