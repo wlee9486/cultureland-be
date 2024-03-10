@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { User } from '@prisma/client';
 import { PrismaService } from 'src/db/prisma/prisma.service';
 import { UserNotFoundById } from 'src/exceptions/UserNotFoundById.exception';
 
@@ -49,5 +50,15 @@ export class FollowsService {
     });
 
     return followers;
+  }
+
+  async addFollow(signedInUser: User, userId: number) {
+    this.findUserById(userId);
+
+    const addedFollow = await this.prismaService.follow.create({
+      data: { followerId: signedInUser.id, followingId: userId },
+    });
+
+    return addedFollow;
   }
 }

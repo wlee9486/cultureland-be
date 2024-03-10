@@ -1,4 +1,7 @@
-import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
+import { User } from '@prisma/client';
+import { Private } from 'src/decorators/private.decorator';
+import { DUser } from 'src/decorators/user.decorator';
 import { FollowsService } from './follows.service';
 
 @Controller('accounts/users')
@@ -13,5 +16,14 @@ export class FollowsController {
   @Get(':userId/follows/followings')
   async getFollowings(@Param('userId', ParseIntPipe) userId: number) {
     return this.followsService.getFollowings(userId);
+  }
+
+  @Post(':userId/follows')
+  @Private('user')
+  async addFollow(
+    @DUser() signedInUser: User,
+    @Param('userId', ParseIntPipe) userId: number,
+  ) {
+    return this.followsService.addFollow(signedInUser, userId);
   }
 }
