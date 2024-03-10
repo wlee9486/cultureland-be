@@ -6,12 +6,11 @@ import {
   ParseIntPipe,
   Post,
   Query,
-  Req,
   Res,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { User } from '@prisma/client';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { Private } from 'src/decorators/private.decorator';
 import { DUser } from 'src/decorators/user.decorator';
 import { SignInRequestDto, SignUpRequestDto } from './users.dto';
@@ -82,15 +81,13 @@ export class UsersController {
 
     return 'successfully signed out';
   }
-
   @Post('refresh-token')
+  @Private('user')
   async refreshToken(
-    @Req() request: Request,
+    @DUser() user: User,
     @Res({ passthrough: true }) response: Response,
   ) {
-    if (request.user!) return;
-
-    const accessToken = await this.usersService.refreshToken(request.user);
+    const accessToken = await this.usersService.refreshToken(user);
 
     response.cookie('accessToken', accessToken, {
       domain: process.env.FRONT_SERVER,
