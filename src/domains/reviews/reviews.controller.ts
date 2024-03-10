@@ -70,17 +70,14 @@ export class ReviewsController {
     return await this.reviewsService.deleteReview(user, reviewId);
   }
 
-  @Get()
-  async getUsersReviews(
-    @Req() req: Request,
-    @Query('userId', ParseIntPipe) userId: number,
-  ) {
+  @Get('users/:userId')
+  async getUsersReviews(@Param('userId', ParseIntPipe) userId: number) {
     return await this.reviewsService.getUsersReviews(userId);
   }
 
-  @Get()
+  @Get('events/:eventId')
   async getEventReviews(
-    @Query('eventId') eventId: string,
+    @Param('eventId', ParseIntPipe) eventId: number,
     @Query('orderBy') orderBy?: SortOrder,
   ) {
     return await this.reviewsService.getEventReviews(eventId, orderBy);

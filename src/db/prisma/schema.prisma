@@ -66,6 +66,7 @@ model Review {
   reviewerId      Int
   event           Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId         Int
+  isVerified      Boolean          @default(false)
   image           String
   rating          Int
   content         String
@@ -100,10 +101,9 @@ model Follow {
 }
 
 model UserEvents {
-  user         User    @relation(fields: [userId], references: [id])
+  user         User   @relation(fields: [userId], references: [id])
   userId       Int
-  event        Event   @relation(fields: [eventId], references: [id])
-  isVerified   Boolean @default(false)
+  event        Event  @relation(fields: [eventId], references: [id])
   receiptImage String
   eventId      Int
 
