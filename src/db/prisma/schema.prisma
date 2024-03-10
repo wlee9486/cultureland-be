@@ -14,9 +14,9 @@ datasource db {
 }
 
 model User {
-  id                  Int                  @id @default(autoincrement())
-  email               String               @unique
-  password            String
+  id              Int              @id @default(autoincrement())
+  email           String           @unique
+  password        String
   // provider_type
   // provider_id   String
   createdAt       DateTime         @default(now())
@@ -27,13 +27,13 @@ model User {
   reviewReactions ReviewReaction[]
   followings      Follow[]         @relation("Followings")
   followers       Follow[]         @relation("Followers")
-  userEvents UserEvents[]
+  userEvents      UserEvents[]
 }
 
 model UserProfile {
-  userId       Int    @id
-  user         User   @relation(fields: [userId], references: [id])
-  nickname     String @unique
+  userId       Int     @id
+  user         User    @relation(fields: [userId], references: [id])
+  nickname     String  @unique
   profileImage String?
 }
 
@@ -45,6 +45,7 @@ model Partner {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
   business  Business?
+  events    Event[]
 }
 
 model Business {
@@ -63,7 +64,7 @@ model Review {
   id              Int              @id @default(autoincrement())
   reviewer        User             @relation(fields: [reviewerId], references: [id])
   reviewerId      Int
-  // event
+  event           Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId         Int
   image           String
   rating          Int
@@ -101,10 +102,89 @@ model Follow {
 model UserEvents {
   user         User    @relation(fields: [userId], references: [id])
   userId       Int
-  // event
-  eventId      Int
+  event        Event   @relation(fields: [eventId], references: [id])
   isVerified   Boolean @default(false)
   receiptImage String
+  eventId      Int
 
   @@id([userId, eventId])
+}
+
+model Event {
+  id          Int          @id @default(autoincrement())
+  apiId       String       @unique
+  partner     Partner      @relation(fields: [partnerId], references: [id])
+  partnerId   Int
+  title       String
+  poster      String
+  area        Area         @relation(fields: [areaCode], references: [code])
+  startDate   DateTime
+  endDate     DateTime
+  venue       Venue        @relation(fields: [venueId], references: [id])
+  categories  Category[]
+  venueId     Int
+  eventDetail EventDetail?
+  userEvents  UserEvents[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  deletedAt   DateTime?
+  areaCode    Int
+  Review      Review[]
+}
+
+model Area {
+  code  Int     @id @default(autoincrement())
+  name  String  @unique
+  event Event[]
+}
+
+model EventDetail {
+  eventId            Int                     @id
+  event              Event                   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  bookingLinks       BookingLink[]
+  description        String?
+  description_images EventDescriptionImage[]
+  price              String
+  runtime            String
+  timeInfo           String
+  targetAudience     String
+  eventStatusCode    Int
+  eventStatus        EventStatus             @relation(fields: [eventStatusCode], references: [code])
+}
+
+model EventStatus {
+  code        Int           @id @default(autoincrement())
+  status      String        @unique
+  eventDetail EventDetail[]
+}
+
+model EventDescriptionImage {
+  id          Int         @id @default(autoincrement())
+  eventDetail EventDetail @relation(fields: [eventId], references: [eventId], onDelete: Cascade)
+  eventId     Int
+  imageUrl    String
+}
+
+model Venue {
+  id        Int     @id @default(autoincrement())
+  apiId     String  @unique
+  name      String
+  address   String
+  latitude  Float
+  longitude Float
+  event     Event[]
+}
+
+model Category {
+  code    Int    @id @default(autoincrement())
+  value   String
+  eventId Int
+  event   Event  @relation(fields: [eventId], references: [id])
+}
+
+model BookingLink {
+  id          Int          @id @default(autoincrement())
+  link        String
+  eventDetail EventDetail? @relation(fields: [eventId], references: [eventId])
+  eventId     Int?
 }
