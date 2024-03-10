@@ -38,6 +38,7 @@ export class UsersService {
           create: {
             nickname: initialNickname,
             profileImage: null,
+            description: "모두들 모여락!"
           },
         },
       },
