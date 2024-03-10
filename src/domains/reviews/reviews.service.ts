@@ -38,6 +38,13 @@ export class ReviewsService {
     const image = await this.uploadImgToS3(imageFile);
     if (!image) throw new UploadedFileNotFoundError();
 
+    const userEvent = await this.prismaService.userEvents.findUnique({
+      where: { userId_eventId: { userId, eventId: Number(eventId) } },
+    });
+
+    let isVerified: boolean;
+    if (userEvent) isVerified = true;
+
     const review = await this.prismaService.review.create({
       data: {
         reviewerId: userId,
@@ -45,6 +52,7 @@ export class ReviewsService {
         rating: Number(rating),
         content,
         image,
+        isVerified,
       },
     });
 
@@ -146,9 +154,9 @@ export class ReviewsService {
     return reviews;
   }
 
-  async getEventReviews(eventId: string, orderBy: SortOrder) {
+  async getEventReviews(eventId: number, orderBy: SortOrder) {
     const reviews = await this.prismaService.review.findMany({
-      where: { eventId: Number(eventId) },
+      where: { eventId },
       select: {
         id: true,
         reviewerId: true,
@@ -157,6 +165,7 @@ export class ReviewsService {
         rating: true,
         content: true,
         createdAt: true,
+        isVerified: true,
         reviewReactions: {
           select: {
             userId: true,
