@@ -1,1 +1,1 @@
-export type AccountType = 'user' | 'partner';
+export type AccountType = 'guest' | 'user' | 'partner';

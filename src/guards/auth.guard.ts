@@ -17,13 +17,11 @@ export class AuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const accountTypeinDecorator =
-      this.reflector.getAllAndOverride<AccountType>('accountType', [
-        context.getHandler(),
-        context.getClass(),
-      ]);
+    const accountTypeinDecorator = this.reflector.getAllAndOverride<
+      AccountType[]
+    >('accountType', [context.getHandler(), context.getClass()]);
 
-    if (!accountTypeinDecorator) {
+    if (!accountTypeinDecorator || accountTypeinDecorator.includes('guest')) {
       return true;
     }
 

@@ -1,6 +1,18 @@
-import { Body, Controller, Get, Post, Query, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Query,
+  Res,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Request, Response } from 'express';
+import { User } from '@prisma/client';
+import { Response } from 'express';
+import { Private } from 'src/decorators/private.decorator';
+import { DUser } from 'src/decorators/user.decorator';
 import { SignInRequestDto, SignUpRequestDto } from './users.dto';
 import { UsersService } from './users.service';
 
@@ -69,15 +81,13 @@ export class UsersController {
 
     return 'successfully signed out';
   }
-
   @Post('refresh-token')
+  @Private('user')
   async refreshToken(
-    @Req() request: Request,
+    @DUser() user: User,
     @Res({ passthrough: true }) response: Response,
   ) {
-    if (request.user!) return;
-
-    const accessToken = await this.usersService.refreshToken(request.user);
+    const accessToken = await this.usersService.refreshToken(user);
 
     response.cookie('accessToken', accessToken, {
       domain: process.env.FRONT_SERVER,
@@ -88,5 +98,23 @@ export class UsersController {
     });
 
     return accessToken;
+  }
+
+  @Get(':userId')
+  @Private('guest', 'user')
+  async getUser(
+    @Param('userId', ParseIntPipe)
+    userId: number,
+    @DUser() user?: User,
+  ) {
+    return this.usersService.getUser(userId, user);
+  }
+
+  @Get(':userId/attended-events')
+  async getAttendedEvents(
+    @Param('userId', ParseIntPipe)
+    userId: number,
+  ) {
+    return this.usersService.getAttendedEvents(userId);
   }
 }
