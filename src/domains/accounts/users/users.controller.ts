@@ -1,6 +1,19 @@
-import { Body, Controller, Get, Post, Query, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Query,
+  Req,
+  Res,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { User } from '@prisma/client';
 import { Request, Response } from 'express';
+import { Private } from 'src/decorators/private.decorator';
+import { DUser } from 'src/decorators/user.decorator';
 import { SignInRequestDto, SignUpRequestDto } from './users.dto';
 import { UsersService } from './users.service';
 
@@ -88,5 +101,15 @@ export class UsersController {
     });
 
     return accessToken;
+  }
+
+  @Get(':userId')
+  @Private('guest', 'user')
+  async getUser(
+    @Param('userId', ParseIntPipe)
+    userId: number,
+    @DUser() user?: User,
+  ) {
+    return this.usersService.getUser(userId, user);
   }
 }

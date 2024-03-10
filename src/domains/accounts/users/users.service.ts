@@ -4,6 +4,7 @@ import { compare, hash } from 'bcrypt';
 import { PrismaService } from 'src/db/prisma/prisma.service';
 import { InvalidPasswordException } from 'src/exceptions/InvalidPassword.exception';
 import { UserNotFoundByEmail } from 'src/exceptions/UserNotFoundByEmail.exception';
+import { UserNotFoundById } from 'src/exceptions/UserNotFoundById.exception';
 import { AccountsService } from '../accounts.service';
 import { SignInRequestDto, SignUpRequestDto } from './users.dto';
 
@@ -34,7 +35,10 @@ export class UsersService {
         email,
         password: encryptedPassword,
         userProfile: {
-          create: { nickname: initialNickname, profileImage: null },
+          create: {
+            nickname: initialNickname,
+            profileImage: null,
+          },
         },
       },
       include: { userProfile: true },
@@ -74,5 +78,28 @@ export class UsersService {
     if (!user) throw new UserNotFoundByEmail();
 
     return user;
+  }
+
+  async getUser(userId: number, signedInUser?: User) {
+    const foundUser = await this.prismaService.user.findUnique({
+      where: { id: userId },
+    });
+    if (!foundUser) throw new UserNotFoundById();
+
+    const user = await this.prismaService.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        userProfile: true,
+        _count: {
+          select: { followers: true, following: true },
+        },
+      },
+    });
+
+    const isMe = signedInUser.id === user.id;
+
+    return { ...user, isMe };
   }
 }
