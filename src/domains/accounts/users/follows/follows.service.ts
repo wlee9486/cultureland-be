@@ -6,11 +6,17 @@ import { UserNotFoundById } from 'src/exceptions/UserNotFoundById.exception';
 export class FollowsService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async getFollowers(userId: number) {
+  async findUserById(id: number) {
     const foundUser = await this.prismaService.user.findUnique({
-      where: { id: userId },
+      where: { id },
     });
     if (!foundUser) throw new UserNotFoundById();
+
+    return foundUser;
+  }
+
+  async getFollowers(userId: number) {
+    this.findUserById(userId);
 
     const followers = await this.prismaService.follow.findMany({
       where: { followingId: userId },
@@ -27,5 +33,21 @@ export class FollowsService {
     return followers;
   }
 
-  
+  async getFollowings(userId: number) {
+    this.findUserById(userId);
+
+    const followers = await this.prismaService.follow.findMany({
+      where: { followerId: userId },
+      select: {
+        following: {
+          select: {
+            id: true,
+            userProfile: { select: { nickname: true, profileImage: true } },
+          },
+        },
+      },
+    });
+
+    return followers;
+  }
 }
