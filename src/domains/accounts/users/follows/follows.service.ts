@@ -61,4 +61,19 @@ export class FollowsService {
 
     return addedFollow;
   }
+
+  async deleteFollow(signedInUser: User, userId: number) {
+    this.findUserById(userId);
+
+    await this.prismaService.follow.delete({
+      where: {
+        followerId_followingId: {
+          followerId: signedInUser.id,
+          followingId: userId,
+        },
+      },
+    });
+
+    return userId;
+  }
 }
