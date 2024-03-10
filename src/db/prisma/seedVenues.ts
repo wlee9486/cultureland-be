@@ -22,7 +22,9 @@ export async function seedVenues() {
   );
 
   // Promise.all로 생성된 모든 Promise를 하나의 트랜잭션으로 묶음
-  await prismaClient.$transaction(upsertPromises);
+  await prismaClient.$transaction(upsertPromises).catch((e) => {
+    console.log(e);
+  });
 
   const endTime = Date.now();
   console.log(
