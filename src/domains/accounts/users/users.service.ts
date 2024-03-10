@@ -38,7 +38,7 @@ export class UsersService {
           create: {
             nickname: initialNickname,
             profileImage: null,
-            description: "모두들 모여락!"
+            description: '모두들 모여락!',
           },
         },
       },
@@ -99,7 +99,10 @@ export class UsersService {
       },
     });
 
-    const isMe = signedInUser.id === user.id;
+    let isMe = false;
+    if (signedInUser) {
+      isMe = signedInUser.id === user.id;
+    }
 
     return { ...user, isMe };
   }
