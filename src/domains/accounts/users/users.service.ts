@@ -38,7 +38,7 @@ export class UsersService {
           create: {
             nickname: initialNickname,
             profileImage: null,
-            description: "모두들 모여락!"
+            description: '모두들 모여락!',
           },
         },
       },
@@ -82,11 +82,6 @@ export class UsersService {
   }
 
   async getUser(userId: number, signedInUser?: User) {
-    const foundUser = await this.prismaService.user.findUnique({
-      where: { id: userId },
-    });
-    if (!foundUser) throw new UserNotFoundById();
-
     const user = await this.prismaService.user.findUnique({
       where: { id: userId },
       select: {
@@ -98,9 +93,23 @@ export class UsersService {
         },
       },
     });
+    if (!user) throw new UserNotFoundById();
 
     const isMe = signedInUser.id === user.id;
 
     return { ...user, isMe };
+  }
+
+  async getAttendedEvents(userId: number) {
+    const user = await this.prismaService.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user) throw new UserNotFoundById();
+
+    const attendedEvents = await this.prismaService.userAttendedEvents.findMany(
+      { where: { userId }, include: { event: true } },
+    );
+
+    return attendedEvents;
   }
 }

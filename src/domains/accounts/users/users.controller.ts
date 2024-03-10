@@ -109,4 +109,12 @@ export class UsersController {
   ) {
     return this.usersService.getUser(userId, user);
   }
+
+  @Get(':userId/attended-events')
+  async getAttendedEvents(
+    @Param('userId', ParseIntPipe)
+    userId: number,
+  ) {
+    return this.usersService.getAttendedEvents(userId);
+  }
 }
