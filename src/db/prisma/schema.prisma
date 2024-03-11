@@ -14,8 +14,8 @@ model User {
   createdAt        DateTime               @default(now())
   updatedAt        DateTime               @updatedAt
   deletedAt        DateTime?
-  followers        Follow[]               @relation("Followings")
   followings       Follow[]               @relation("Followers")
+  followers        Follow[]               @relation("Followings")
   reviews          Review[]
   reviewReactions  ReviewReaction[]
   attendedEvents   UserAttendedEvents[]
@@ -25,16 +25,16 @@ model User {
 
 model UserProfile {
   userId       Int     @id
-  user         User    @relation(fields: [userId], references: [id])
   nickname     String  @unique
   profileImage String?
   description  String
+  user         User    @relation(fields: [userId], references: [id])
 }
 
 model Follow {
   followerId  Int
-  follower    User @relation("Followers", fields: [followerId], references: [id])
   followingId Int
+  follower    User @relation("Followers", fields: [followerId], references: [id])
   following   User @relation("Followings", fields: [followingId], references: [id])
 
   @@id([followerId, followingId])
@@ -65,37 +65,37 @@ model Business {
 
 model Review {
   id              Int              @id @default(autoincrement())
-  reviewer        User             @relation(fields: [reviewerId], references: [id])
   reviewerId      Int
-  event           Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId         Int
-  isVerified      Boolean          @default(false)
   rating          Int
   content         String
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   deletedAt       DateTime?
-  image           String
+  image           String?
+  isVerified      Boolean          @default(false)
+  event           Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  reviewer        User             @relation(fields: [reviewerId], references: [id])
   reviewReactions ReviewReaction[]
 
   @@unique([reviewerId, eventId])
 }
 
 model UserAttendedEvents {
-  user         User   @relation(fields: [userId], references: [id])
   userId       Int
-  event        Event  @relation(fields: [eventId], references: [id])
   eventId      Int
   receiptImage String
+  event        Event  @relation(fields: [eventId], references: [id])
+  user         User   @relation(fields: [userId], references: [id])
 
   @@id([userId, eventId])
 }
 
 model UserInterestedEvents {
-  user    User  @relation(fields: [userId], references: [id])
   userId  Int
-  event   Event @relation(fields: [eventId], references: [id])
   eventId Int
+  event   Event @relation(fields: [eventId], references: [id])
+  user    User  @relation(fields: [userId], references: [id])
 
   @@id([userId, eventId])
 }
@@ -126,15 +126,15 @@ model Event {
   deletedAt       DateTime?
   apiId           String                 @unique
   areaCode        Int
-  category        Category               @relation(fields: [categoryCode], references: [code])
+  categoryCode    Int
   area            Area                   @relation(fields: [areaCode], references: [code])
+  category        Category               @relation(fields: [categoryCode], references: [code])
   partner         Partner                @relation(fields: [partnerId], references: [id])
   venue           Venue                  @relation(fields: [venueId], references: [id])
   eventDetail     EventDetail?
   reviews         Review[]
   attendedUsers   UserAttendedEvents[]
   interestedUsers UserInterestedEvents[]
-  categoryCode    Int
 }
 
 model EventDescriptionImage {
@@ -146,52 +146,55 @@ model EventDescriptionImage {
 
 model EventDetail {
   eventId            Int                     @id
-  event              Event                   @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  bookingLinks       BookingLink[]
   description        String?
-  description_images EventDescriptionImage[]
   price              String
   runtime            String
   timeInfo           String
   targetAudience     String
   eventStatusCode    Int
+  bookingLinks       BookingLink[]
+  description_images EventDescriptionImage[]
+  event              Event                   @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventStatus        EventStatus             @relation(fields: [eventStatusCode], references: [code])
 }
 
 model EventStatus {
   code        Int           @id @default(autoincrement())
-  status      String        @unique
+  name        String
+  value       String        @unique
   eventDetail EventDetail[]
 }
 
 model Venue {
   id        Int     @id @default(autoincrement())
-  apiId     String  @unique
   name      String
   address   String
   latitude  Float
   longitude Float
+  apiId     String  @unique
   event     Event[]
 }
 
 model Category {
   code  Int     @id @default(autoincrement())
+  name  String
   value String  @unique
   event Event[]
 }
 
 model BookingLink {
   id          Int          @id @default(autoincrement())
+  eventId     Int?
   link        String
   name        String
   eventDetail EventDetail? @relation(fields: [eventId], references: [eventId])
-  eventId     Int?
 
   @@unique([eventId, name])
 }
 
 model Area {
   code  Int     @id @default(autoincrement())
-  name  String  @unique
+  name  String
+  value String  @unique
   event Event[]
 }
