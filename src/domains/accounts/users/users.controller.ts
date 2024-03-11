@@ -101,7 +101,7 @@ export class UsersController {
   }
 
   @Get(':userId')
-  @Private('guest', 'user')
+  @Private('user', 'guest')
   async getUser(
     @Param('userId', ParseIntPipe)
     userId: number,

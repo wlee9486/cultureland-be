@@ -21,13 +21,16 @@ export class AuthGuard implements CanActivate {
       AccountType[]
     >('accountType', [context.getHandler(), context.getClass()]);
 
-    if (!accountTypeinDecorator || accountTypeinDecorator.includes('guest')) {
+    if (!accountTypeinDecorator) {
       return true;
     }
 
     const request = context.switchToHttp().getRequest<Request>();
 
     const accessToken = this.extractTokenFromCookie(request);
+    if (!accessToken && accountTypeinDecorator[1] === 'guest') {
+      return true;
+    }
     if (!accessToken) throw new TokenNotFoundException();
 
     try {
@@ -36,16 +39,14 @@ export class AuthGuard implements CanActivate {
         accessToken,
         secretKey,
       ) as JwtPayload & AccountType;
-
-      if (accountTypeInAccessToken !== accountTypeinDecorator)
+      if (accountTypeInAccessToken !== accountTypeinDecorator[0])
         throw new Error();
 
-      if (accountTypeinDecorator.includes('user')) {
-        const user = await this.prismaService.user.findUniqueOrThrow({
-          where: { id: Number(id) },
-        });
-        request.user = user;
-      }
+      const user = await this.prismaService.user.findUniqueOrThrow({
+        where: { id: Number(id) },
+      });
+
+      request.user = user;
     } catch {
       throw new TokenVerificationException();
     }

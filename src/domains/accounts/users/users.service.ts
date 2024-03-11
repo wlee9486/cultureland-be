@@ -95,7 +95,10 @@ export class UsersService {
     });
     if (!user) throw new UserNotFoundById();
 
-    const isMe = signedInUser.id === user.id;
+    let isMe = false;
+    if (signedInUser) {
+      isMe = signedInUser.id === user.id;
+    }
 
     return { ...user, isMe };
   }
