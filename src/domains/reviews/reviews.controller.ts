@@ -34,7 +34,7 @@ export class ReviewsController {
   async createReview(
     @Req() req: Request,
     @Body() dto: CreateReviewRequestDto,
-    @UploadedFile() image: Express.Multer.File,
+    @UploadedFile() image?: Express.Multer.File,
   ) {
     const user: User = req.user;
 
@@ -50,7 +50,7 @@ export class ReviewsController {
     reviewId: number,
     @Body()
     dto: UpdateReviewRequestDto,
-    @UploadedFile() image: Express.Multer.File,
+    @UploadedFile() image?: Express.Multer.File,
   ) {
     const user: User = req.user;
 
@@ -59,7 +59,6 @@ export class ReviewsController {
 
   @Delete(':reviewId')
   @Private('user')
-  @UseInterceptors(FileInterceptor('image'))
   async deleteReview(
     @Req() req: Request,
     @Param('reviewId', ParseIntPipe)
@@ -78,9 +77,10 @@ export class ReviewsController {
   @Get('events/:eventId')
   async getEventReviews(
     @Param('eventId', ParseIntPipe) eventId: number,
+    @Query('page', ParseIntPipe) page: number,
     @Query('orderBy') orderBy?: SortOrder,
   ) {
-    return await this.reviewsService.getEventReviews(eventId, orderBy);
+    return await this.reviewsService.getEventReviews(eventId, page, orderBy);
   }
 
   @Post(':reviewId/reactions')

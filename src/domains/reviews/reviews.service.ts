@@ -31,12 +31,17 @@ export class ReviewsService {
   async createReview(
     user: User,
     dto: CreateReviewRequestDto,
-    imageFile: Express.Multer.File,
+    imageFile?: Express.Multer.File,
   ) {
     const { eventId, rating, content } = dto;
     const userId = user.id;
-    const image = await this.uploadImgToS3(imageFile);
-    if (!image) throw new UploadedFileNotFoundError();
+
+    let image;
+    if (imageFile) {
+      image = await this.uploadImgToS3(imageFile);
+    } else {
+      image = null;
+    }
 
     const userEvent = await this.prismaService.userAttendedEvents.findUnique({
       where: { userId_eventId: { userId, eventId: Number(eventId) } },
@@ -63,12 +68,17 @@ export class ReviewsService {
     user: User,
     reviewId: number,
     dto: CreateReviewRequestDto,
-    imageFile: Express.Multer.File,
+    imageFile?: Express.Multer.File,
   ) {
     const { eventId, rating, content } = dto;
     const userId = user.id;
-    const image = await this.uploadImgToS3(imageFile);
-    if (!image) throw new UploadedFileNotFoundError();
+
+    let image;
+    if (imageFile) {
+      image = await this.uploadImgToS3(imageFile);
+    } else {
+      image = null;
+    }
 
     const foundReview = await this.findUniqueReview(reviewId);
     if (!foundReview) return new ReviewNotFoundById();
@@ -105,7 +115,7 @@ export class ReviewsService {
   }
 
   async uploadImgToS3(file: Express.Multer.File) {
-    if (!file) return undefined;
+    if (!file) throw new UploadedFileNotFoundError();
 
     const fileNameBase = nanoid();
     const extension = file.originalname.split('.').splice(-1);
@@ -154,7 +164,11 @@ export class ReviewsService {
     return reviews;
   }
 
-  async getEventReviews(eventId: number, orderBy: SortOrder) {
+  async getEventReviews(eventId: number, page: number, orderBy: SortOrder) {
+    const pageSize = Number(
+      this.configService.getOrThrow('PAGESIZE_REVIEW_DETAIL'),
+    );
+
     const reviews = await this.prismaService.review.findMany({
       where: { eventId },
       select: {
@@ -174,18 +188,14 @@ export class ReviewsService {
           },
         },
       },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
       orderBy: { createdAt: 'desc' },
     });
 
     const reviewsWithReactionCounts = this.countReactions(reviews);
 
-    if (!orderBy || orderBy === 'recent') {
-      return reviewsWithReactionCounts;
-    } else if (orderBy === 'likes') {
-      return reviewsWithReactionCounts.sort((a, b) => b.likes - a.likes);
-    } else {
-      return reviewsWithReactionCounts.sort((a, b) => b.hates - a.hates);
-    }
+    return this.sortReviews(orderBy, reviewsWithReactionCounts);
   }
 
   countReactions(reviews: ReviewWithReactionsType[]): ReviewResponseDto[] {
@@ -200,21 +210,58 @@ export class ReviewsService {
     }));
   }
 
+  sortReviews(orderBy: SortOrder, reviews: ReviewResponseDto[]) {
+    if (!orderBy || orderBy === orderBy) {
+      return reviews;
+    } else if (orderBy === orderBy) {
+      return reviews.sort((a, b) => b.likes - a.likes);
+    } else {
+      return reviews.sort((a, b) => b.hates - a.hates);
+    }
+  }
+
   async getFamousReviews() {
+    const listSize = Number(
+      this.configService.getOrThrow('LISTSIZE_REVIEW_FAMOUS'),
+    );
+
+    const reactions = await this.prismaService.reviewReaction.groupBy({
+      by: ['reviewId'],
+      where: {
+        reactionValue: 1,
+      },
+      _count: {
+        reactionValue: true,
+      },
+      orderBy: {
+        _count: {
+          reactionValue: 'desc',
+        },
+      },
+      take: listSize,
+    });
+
+    const reviewIds = reactions.map((reaction) => reaction.reviewId);
+
     const reviews = await this.prismaService.review.findMany({
-      include: {
+      where: { id: { in: reviewIds } },
+      select: {
+        id: true,
+        reviewerId: true,
+        eventId: true,
+        image: true,
+        rating: true,
+        content: true,
+        createdAt: true,
+        isVerified: true,
         reviewReactions: {
-          where: {
-            reactionValue: 1,
+          select: {
+            userId: true,
+            reviewId: true,
+            reactionValue: true,
           },
         },
       },
-      orderBy: {
-        reviewReactions: {
-          _count: 'desc',
-        },
-      },
-      take: 10,
     });
 
     return reviews;
