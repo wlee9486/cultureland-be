@@ -154,7 +154,11 @@ export class ReviewsService {
     return reviews;
   }
 
-  async getEventReviews(eventId: number, orderBy: SortOrder) {
+  async getEventReviews(eventId: number, page: number, orderBy: SortOrder) {
+    const pageSize = Number(
+      this.configService.getOrThrow('PAGESIZE_REVIEW_DETAIL'),
+    );
+
     const reviews = await this.prismaService.review.findMany({
       where: { eventId },
       select: {
@@ -174,6 +178,8 @@ export class ReviewsService {
           },
         },
       },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
       orderBy: { createdAt: 'desc' },
     });
 
@@ -201,6 +207,10 @@ export class ReviewsService {
   }
 
   async getFamousReviews() {
+    const listSize = Number(
+      this.configService.getOrThrow('LISTSIZE_REVIEW_FAMOUS'),
+    );
+
     const reviews = await this.prismaService.review.findMany({
       include: {
         reviewReactions: {
@@ -214,7 +224,7 @@ export class ReviewsService {
           _count: 'desc',
         },
       },
-      take: 10,
+      take: listSize,
     });
 
     return reviews;
