@@ -34,7 +34,7 @@ export class ReviewsController {
   async createReview(
     @Req() req: Request,
     @Body() dto: CreateReviewRequestDto,
-    @UploadedFile() image: Express.Multer.File,
+    @UploadedFile() image?: Express.Multer.File,
   ) {
     const user: User = req.user;
 
@@ -50,7 +50,7 @@ export class ReviewsController {
     reviewId: number,
     @Body()
     dto: UpdateReviewRequestDto,
-    @UploadedFile() image: Express.Multer.File,
+    @UploadedFile() image?: Express.Multer.File,
   ) {
     const user: User = req.user;
 

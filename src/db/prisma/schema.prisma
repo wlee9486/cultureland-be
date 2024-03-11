@@ -75,7 +75,7 @@ model Review {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   deletedAt       DateTime?
-  image           String
+  image           String?
   reviewReactions ReviewReaction[]
 
   @@unique([reviewerId, eventId])

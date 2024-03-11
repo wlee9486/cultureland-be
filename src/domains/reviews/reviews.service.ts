@@ -31,12 +31,17 @@ export class ReviewsService {
   async createReview(
     user: User,
     dto: CreateReviewRequestDto,
-    imageFile: Express.Multer.File,
+    imageFile?: Express.Multer.File,
   ) {
     const { eventId, rating, content } = dto;
     const userId = user.id;
-    const image = await this.uploadImgToS3(imageFile);
-    if (!image) throw new UploadedFileNotFoundError();
+
+    let image;
+    if (imageFile) {
+      image = await this.uploadImgToS3(imageFile);
+    } else {
+      image = null;
+    }
 
     const userEvent = await this.prismaService.userAttendedEvents.findUnique({
       where: { userId_eventId: { userId, eventId: Number(eventId) } },
@@ -63,12 +68,17 @@ export class ReviewsService {
     user: User,
     reviewId: number,
     dto: CreateReviewRequestDto,
-    imageFile: Express.Multer.File,
+    imageFile?: Express.Multer.File,
   ) {
     const { eventId, rating, content } = dto;
     const userId = user.id;
-    const image = await this.uploadImgToS3(imageFile);
-    if (!image) throw new UploadedFileNotFoundError();
+
+    let image;
+    if (imageFile) {
+      image = await this.uploadImgToS3(imageFile);
+    } else {
+      image = null;
+    }
 
     const foundReview = await this.findUniqueReview(reviewId);
     if (!foundReview) return new ReviewNotFoundById();
@@ -105,7 +115,7 @@ export class ReviewsService {
   }
 
   async uploadImgToS3(file: Express.Multer.File) {
-    if (!file) return undefined;
+    if (!file) throw new UploadedFileNotFoundError();
 
     const fileNameBase = nanoid();
     const extension = file.originalname.split('.').splice(-1);
