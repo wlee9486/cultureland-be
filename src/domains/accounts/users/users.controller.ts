@@ -81,6 +81,7 @@ export class UsersController {
 
     return 'successfully signed out';
   }
+
   @Post('refresh-token')
   @Private('user')
   async refreshToken(

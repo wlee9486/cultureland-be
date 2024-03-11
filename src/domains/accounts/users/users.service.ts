@@ -38,7 +38,7 @@ export class UsersService {
           create: {
             nickname: initialNickname,
             profileImage: null,
-            description: '모두들 모여락!',
+            description: '컬처랜드로 모여락!',
           },
         },
       },
@@ -89,7 +89,7 @@ export class UsersService {
         email: true,
         userProfile: true,
         _count: {
-          select: { followers: true, following: true },
+          select: { followers: true, followings: true },
         },
       },
     });
