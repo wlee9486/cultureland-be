@@ -185,13 +185,7 @@ export class ReviewsService {
 
     const reviewsWithReactionCounts = this.countReactions(reviews);
 
-    if (!orderBy || orderBy === 'recent') {
-      return reviewsWithReactionCounts;
-    } else if (orderBy === 'likes') {
-      return reviewsWithReactionCounts.sort((a, b) => b.likes - a.likes);
-    } else {
-      return reviewsWithReactionCounts.sort((a, b) => b.hates - a.hates);
-    }
+    return this.sortReviews(orderBy, reviewsWithReactionCounts);
   }
 
   countReactions(reviews: ReviewWithReactionsType[]): ReviewResponseDto[] {
@@ -204,6 +198,16 @@ export class ReviewsService {
         (reaction) => reaction.reactionValue === -1,
       ).length,
     }));
+  }
+
+  sortReviews(orderBy: SortOrder, reviews: ReviewResponseDto[]) {
+    if (!orderBy || orderBy === orderBy) {
+      return reviews;
+    } else if (orderBy === orderBy) {
+      return reviews.sort((a, b) => b.likes - a.likes);
+    } else {
+      return reviews.sort((a, b) => b.hates - a.hates);
+    }
   }
 
   async getFamousReviews() {
