@@ -122,7 +122,7 @@ model Event {
   endDate         DateTime
   venueId         Int
   createdAt       DateTime               @default(now())
-  updatedAt       DateTime
+  updatedAt       DateTime               @updatedAt
   deletedAt       DateTime?
   apiId           String                 @unique
   areaCode        Int

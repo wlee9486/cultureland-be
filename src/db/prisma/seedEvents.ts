@@ -68,6 +68,16 @@ export async function seedEvents() {
           venue: {
             connect: { apiId: event.mt10id },
           },
+          category: {
+            connectOrCreate: {
+              where: {
+                value: event.genrenm,
+              },
+              create: {
+                value: event.genrenm,
+              },
+            },
+          },
           eventDetail: {
             create: {
               description: event.sty,
