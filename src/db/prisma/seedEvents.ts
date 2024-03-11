@@ -48,7 +48,7 @@ export async function seedEvents() {
               business: {
                 create: {
                   address: '서울특별시 중구 청계천로 24',
-                  name: '유데미 부트캡프 1기 moyeorak팀',
+                  name: '유데미 부트캠프 1기 moyeorak팀',
                   ownerName: '고현아',
                   bankName: '웅진은행',
                   bankAccount: '999-999-9999-9999',
