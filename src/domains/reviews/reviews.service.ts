@@ -38,7 +38,7 @@ export class ReviewsService {
     const image = await this.uploadImgToS3(imageFile);
     if (!image) throw new UploadedFileNotFoundError();
 
-    const userEvent = await this.prismaService.userEvents.findUnique({
+    const userEvent = await this.prismaService.userAttendedEvents.findUnique({
       where: { userId_eventId: { userId, eventId: Number(eventId) } },
     });
 
