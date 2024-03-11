@@ -1,20 +1,21 @@
 import { PrismaClient } from '@prisma/client';
+import { utils } from '../../utils';
 
 const prismaClient = new PrismaClient();
 
 const startTime = Date.now();
 
 export async function seedStatus() {
-  const statuses = [
-    { status: '진행중' },
-    { status: '진행예정' },
-    { status: '마감' },
-  ];
-  for (const status of statuses) {
+  const apiStatuses = ['공연예정', '공연중', '공연완료'];
+
+  for (const status of apiStatuses) {
     await prismaClient.eventStatus.upsert({
-      where: { status: status.status },
+      where: { value: status },
       update: {},
-      create: status,
+      create: {
+        name: utils.integrations.state(status),
+        value: status,
+      },
     });
   }
 

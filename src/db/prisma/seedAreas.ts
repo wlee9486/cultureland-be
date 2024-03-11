@@ -1,11 +1,12 @@
 import { PrismaClient } from '@prisma/client';
+import { utils } from '../../utils';
 
 const prismaClient = new PrismaClient();
 
 const startTime = Date.now();
 
 export async function seedAreas() {
-  const areas = [
+  const apiAreas = [
     '서울특별시',
     '부산광역시',
     '대구광역시',
@@ -15,7 +16,7 @@ export async function seedAreas() {
     '울산광역시',
     '세종특별자치시',
     '경기도',
-    '강원도',
+    '강원특별자치도',
     '충청남도',
     '충청북도',
     '전라남도',
@@ -23,13 +24,20 @@ export async function seedAreas() {
     '경상남도',
     '경상북도',
     '제주특별자치도',
+    '해외',
+    '기타',
   ];
-  for (const area of areas) {
+
+  for (const area of apiAreas) {
     await prismaClient.area.upsert({
-      where: { name: area },
+      where: {
+        name: utils.integrations.area(area),
+        value: area,
+      },
       update: {},
       create: {
-        name: area,
+        name: utils.integrations.area(area),
+        value: area,
       },
     });
   }
