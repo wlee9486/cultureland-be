@@ -14,6 +14,7 @@ export async function seedUser() {
       userProfile: {
         create: {
           nickname: 'testseed',
+          description: '컬처랜드로 모여락',
         },
       },
     },
@@ -27,6 +28,7 @@ export async function seedUser() {
       userProfile: {
         create: {
           nickname: 'exampleseed',
+          description: '컬처랜드로 모여락',
         },
       },
     },
