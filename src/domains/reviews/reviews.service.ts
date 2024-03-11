@@ -215,20 +215,43 @@ export class ReviewsService {
       this.configService.getOrThrow('LISTSIZE_REVIEW_FAMOUS'),
     );
 
-    const reviews = await this.prismaService.review.findMany({
-      include: {
-        reviewReactions: {
-          where: {
-            reactionValue: 1,
-          },
-        },
+    const reactions = await this.prismaService.reviewReaction.groupBy({
+      by: ['reviewId'],
+      where: {
+        reactionValue: 1,
+      },
+      _count: {
+        reactionValue: true,
       },
       orderBy: {
-        reviewReactions: {
-          _count: 'desc',
+        _count: {
+          reactionValue: 'desc',
         },
       },
       take: listSize,
+    });
+
+    const reviewIds = reactions.map((reaction) => reaction.reviewId);
+
+    const reviews = await this.prismaService.review.findMany({
+      where: { id: { in: reviewIds } },
+      select: {
+        id: true,
+        reviewerId: true,
+        eventId: true,
+        image: true,
+        rating: true,
+        content: true,
+        createdAt: true,
+        isVerified: true,
+        reviewReactions: {
+          select: {
+            userId: true,
+            reviewId: true,
+            reactionValue: true,
+          },
+        },
+      },
     });
 
     return reviews;
