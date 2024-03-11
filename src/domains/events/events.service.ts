@@ -12,12 +12,35 @@ export class EventsService {
     const pageSize = this.configService.getOrThrow<number>(
       'PAGESIZE_EVENT_LIST',
     );
-    return await this.prismaService.event.findMany({
+    const events = await this.prismaService.event.findMany({
       where: {},
+      include: {
+        venue: true,
+        category: true,
+        area: true,
+      },
       orderBy: { startDate: 'desc' },
       skip: Number(pageSize) * (page - 1),
       take: Number(pageSize),
     });
+
+    const eventsWithAvgRating = await Promise.all(
+      events.map(async (event) => {
+        const aggregate = await this.prismaService.review.aggregate({
+          _avg: {
+            rating: true,
+          },
+          where: {
+            eventId: event.id,
+          },
+        });
+        return {
+          ...event,
+          avgRating: aggregate._avg.rating ? aggregate._avg.rating : 0,
+        };
+      }),
+    );
+    return eventsWithAvgRating;
   }
 
   async getEvent(eventId: number) {
