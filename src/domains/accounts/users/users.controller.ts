@@ -5,15 +5,23 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Put,
   Query,
   Res,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { User } from '@prisma/client';
 import { Response } from 'express';
 import { Private } from 'src/decorators/private.decorator';
 import { DUser } from 'src/decorators/user.decorator';
-import { SignInRequestDto, SignUpRequestDto } from './users.dto';
+import {
+  SignInRequestDto,
+  SignUpRequestDto,
+  UpdateInfoRequestDto,
+} from './users.dto';
 import { UsersService } from './users.service';
 
 @Controller('accounts/users')
@@ -109,6 +117,32 @@ export class UsersController {
     @DUser() user?: User,
   ) {
     return this.usersService.getUser(userId, user);
+  }
+
+  @Put(':userId')
+  @Private('user')
+  @UseInterceptors(FileInterceptor('profileImage'))
+  async updateUser(
+    @DUser() user: User,
+    @Body() dto: UpdateInfoRequestDto,
+    @UploadedFile() profileImage: Express.Multer.File,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const accessToken = await this.usersService.updateUser(
+      user,
+      dto,
+      profileImage,
+    );
+
+    response.cookie('accessToken', accessToken, {
+      domain: process.env.FRONT_SERVER,
+      secure: true,
+      httpOnly: true,
+      sameSite: 'none',
+      maxAge: this.maxAge,
+    });
+
+    return accessToken;
   }
 
   @Get(':userId/attended-events')
