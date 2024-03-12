@@ -1,18 +1,10 @@
-import {
-  ObjectCannedACL,
-  PutObjectCommand,
-  PutObjectCommandInput,
-  S3Client,
-} from '@aws-sdk/client-s3';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { User } from '@prisma/client';
-import { nanoid } from 'nanoid';
+import uploadImageToS3 from 'src/aws/uploadImageToS3';
 import { PrismaService } from 'src/db/prisma/prisma.service';
-import { FailedToUploadFileException } from 'src/exceptions/FailedToUploadFile.exception';
 import { PermissionDeniedException } from 'src/exceptions/PermissionDenied.exception';
 import { ReviewNotFoundById } from 'src/exceptions/ReviewNotFoundById.exception';
-import { UploadedFileNotFoundError } from 'src/exceptions/UploadedFileNotFoundError.exception';
 import {
   CreateReactionRequestDto,
   CreateReviewRequestDto,
@@ -38,7 +30,7 @@ export class ReviewsService {
 
     let image;
     if (imageFile) {
-      image = await this.uploadImgToS3(imageFile);
+      image = await uploadImageToS3(imageFile, 'review');
     } else {
       image = null;
     }
@@ -75,7 +67,7 @@ export class ReviewsService {
 
     let image;
     if (imageFile) {
-      image = await this.uploadImgToS3(imageFile);
+      image = await uploadImageToS3(imageFile, 'review');
     } else {
       image = null;
     }
@@ -112,40 +104,6 @@ export class ReviewsService {
     });
 
     return reviewId;
-  }
-
-  async uploadImgToS3(file: Express.Multer.File) {
-    if (!file) throw new UploadedFileNotFoundError();
-
-    const fileNameBase = nanoid();
-    const extension = file.originalname.split('.').splice(-1);
-    const fileName = `${fileNameBase}.${extension}`;
-
-    const awsRegion = this.configService.getOrThrow('AWS_REGION');
-    const bucketName = this.configService.getOrThrow('AWS_S3_BUCKET_NAME');
-    const client = new S3Client({
-      region: awsRegion,
-      credentials: {
-        accessKeyId: this.configService.getOrThrow('AWS_ACCESS_KEY'),
-        secretAccessKey: this.configService.getOrThrow('AWS_SECRET_KEY'),
-      },
-    });
-
-    const key = `cultureland/review/${Date.now().toString()}-${fileName}`;
-    const params: PutObjectCommandInput = {
-      Key: key,
-      Body: file.buffer,
-      Bucket: bucketName,
-      ACL: ObjectCannedACL.public_read,
-    };
-    const command = new PutObjectCommand(params);
-
-    const uploadFileS3 = await client.send(command);
-
-    if (uploadFileS3.$metadata.httpStatusCode !== 200)
-      throw new FailedToUploadFileException();
-    const imgUrl = `${key}`;
-    return imgUrl;
   }
 
   async findUniqueReview(reviewId: number) {

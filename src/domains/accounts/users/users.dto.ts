@@ -17,3 +17,14 @@ export class SignInRequestDto {
   @IsNotEmpty()
   password: string;
 }
+
+export class UpdateInfoRequestDto {
+  @IsNotEmpty()
+  password: string;
+
+  @IsNotEmpty()
+  nickname: string;
+
+  @IsNotEmpty()
+  description: string;
+}
