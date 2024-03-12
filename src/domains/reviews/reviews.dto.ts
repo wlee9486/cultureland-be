@@ -1,4 +1,3 @@
-import { Prisma } from '@prisma/client';
 import { IsNotEmpty, IsNumberString, IsString } from 'class-validator';
 
 export class CreateReviewRequestDto {
@@ -16,36 +15,6 @@ export class CreateReviewRequestDto {
 }
 
 export class UpdateReviewRequestDto extends CreateReviewRequestDto {}
-
-export type ReviewWithReactionsType = Prisma.ReviewGetPayload<{
-  select: {
-    id: true;
-    reviewerId: true;
-    eventId: true;
-    image: true;
-    rating: true;
-    content: true;
-    createdAt: true;
-    reviewReactions: {
-      select: {
-        userId: true;
-        reviewId: true;
-        reactionValue: true;
-      };
-    };
-  };
-}>;
-
-export class ReviewResponseDto {
-  id: number;
-  reviewerId: number;
-  eventId: number;
-  image: string;
-  rating: number;
-  content: string;
-  likes: number;
-  hates: number;
-}
 
 export class CreateReactionRequestDto {
   reactionValue: 1 | -1;
