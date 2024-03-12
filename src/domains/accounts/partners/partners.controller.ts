@@ -30,7 +30,7 @@ export class PartnersController {
     const accessToken = await this.partnersService.signUp(dto);
 
     response.cookie('accessToken', accessToken, {
-      domain: process.env.FRONT_SERVER,
+      domain: process.env.BACKEND_SERVER,
       secure: true,
       httpOnly: true,
       sameSite: 'none',
@@ -48,7 +48,7 @@ export class PartnersController {
     const accessToken = await this.partnersService.signIn(dto);
 
     response.cookie('accessToken', accessToken, {
-      domain: process.env.FRONT_SERVER,
+      domain: process.env.BACKEND_SERVER,
       secure: true,
       httpOnly: true,
       sameSite: 'none',
@@ -61,7 +61,7 @@ export class PartnersController {
   @Post('sign-out')
   async signOut(@Res({ passthrough: true }) response: Response) {
     response.clearCookie('accessToken', {
-      domain: process.env.FRONT_SERVER,
+      domain: process.env.BACKEND_SERVER,
       secure: true,
       httpOnly: true,
       sameSite: 'none',
