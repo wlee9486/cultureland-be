@@ -182,12 +182,12 @@ export class EventsService {
     }
     const avgRating = totalReviews > 0 ? totalRating / totalReviews : 0;
 
-    const event = {
+    const data = {
       event: foundEvent,
       avgRating: avgRating.toFixed(1),
     };
 
-    return event;
+    return data;
   }
 
   async updateEventReservationWebsite() {
