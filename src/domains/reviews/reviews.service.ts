@@ -169,9 +169,9 @@ export class ReviewsService {
   }
 
   sortReviews(orderBy: SortOrder, reviews: ReviewResponseDto[]) {
-    if (!orderBy || orderBy === orderBy) {
+    if (!orderBy || orderBy === 'recent') {
       return reviews;
-    } else if (orderBy === orderBy) {
+    } else if (orderBy === 'likes') {
       return reviews.sort((a, b) => b.likes - a.likes);
     } else {
       return reviews.sort((a, b) => b.hates - a.hates);
