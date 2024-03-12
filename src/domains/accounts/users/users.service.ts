@@ -1,18 +1,10 @@
-import {
-  ObjectCannedACL,
-  PutObjectCommand,
-  PutObjectCommandInput,
-  S3Client,
-} from '@aws-sdk/client-s3';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { User } from '@prisma/client';
 import { compare, hash } from 'bcrypt';
-import { nanoid } from 'nanoid';
+import uploadImageToS3 from 'src/aws/uploadImageToS3';
 import { PrismaService } from 'src/db/prisma/prisma.service';
-import { FailedToUploadFileException } from 'src/exceptions/FailedToUploadFile.exception';
 import { InvalidPasswordException } from 'src/exceptions/InvalidPassword.exception';
-import { UploadedFileNotFoundError } from 'src/exceptions/UploadedFileNotFoundError.exception';
 import { UserNotFoundByEmail } from 'src/exceptions/UserNotFoundByEmail.exception';
 import { UserNotFoundById } from 'src/exceptions/UserNotFoundById.exception';
 import { AccountsService } from '../accounts.service';
@@ -126,7 +118,7 @@ export class UsersService {
     const { password, nickname, description } = dto;
 
     const encryptedPassword = await hash(password, 12);
-    const profileImage = await this.uploadImgToS3(imageFile);
+    const profileImage = await uploadImageToS3(imageFile, 'profile');
 
     const updatedUser = await this.prismaService.user.update({
       where: { id: user.id },
@@ -172,39 +164,5 @@ export class UsersService {
     });
 
     return reviewId;
-  }
-
-  async uploadImgToS3(file: Express.Multer.File) {
-    if (!file) throw new UploadedFileNotFoundError();
-
-    const fileNameBase = nanoid();
-    const extension = file.originalname.split('.').splice(-1);
-    const fileName = `${fileNameBase}.${extension}`;
-
-    const awsRegion = this.configService.getOrThrow('AWS_REGION');
-    const bucketName = this.configService.getOrThrow('AWS_S3_BUCKET_NAME');
-    const client = new S3Client({
-      region: awsRegion,
-      credentials: {
-        accessKeyId: this.configService.getOrThrow('AWS_ACCESS_KEY'),
-        secretAccessKey: this.configService.getOrThrow('AWS_SECRET_KEY'),
-      },
-    });
-
-    const key = `cultureland/review/${Date.now().toString()}-${fileName}`;
-    const params: PutObjectCommandInput = {
-      Key: key,
-      Body: file.buffer,
-      Bucket: bucketName,
-      ACL: ObjectCannedACL.public_read,
-    };
-    const command = new PutObjectCommand(params);
-
-    const uploadFileS3 = await client.send(command);
-
-    if (uploadFileS3.$metadata.httpStatusCode !== 200)
-      throw new FailedToUploadFileException();
-    const imgUrl = `${key}`;
-    return imgUrl;
   }
 }
