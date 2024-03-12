@@ -53,6 +53,55 @@ export class EventsService {
     return { data };
   }
 
+  async searchEvents(keywords: string, page: number) {
+    const searchKey = keywords.replace(' ', ' | ');
+    const options = {
+      OR: [
+        { title: { search: searchKey } },
+        { category: { name: { search: searchKey } } },
+        { area: { name: { search: searchKey } } },
+      ],
+    };
+    const events = await this.prismaService.event.findMany({
+      where: options,
+      include: {
+        venue: true,
+        category: true,
+        area: true,
+        _count: true,
+      },
+      orderBy: { startDate: 'desc' },
+      skip: Number(this.pageSize) * (page - 1),
+      take: Number(this.pageSize),
+    });
+    const eventsCount = await this.prismaService.event.count({
+      where: options,
+    });
+
+    const eventsWithAvgRating = await Promise.all(
+      events.map(async (event) => {
+        const aggregate = await this.prismaService.review.aggregate({
+          _avg: {
+            rating: true,
+          },
+          where: {
+            eventId: event.id,
+          },
+        });
+        return {
+          ...event,
+          avgRating: aggregate._avg.rating ? aggregate._avg.rating : 0,
+        };
+      }),
+    );
+
+    const data = {
+      events: eventsWithAvgRating,
+      totalEventsCnt: eventsCount,
+    };
+    return { data };
+  }
+
   async getEvent(eventId: number) {
     const foundEvent = await this.prismaService.event.findUniqueOrThrow({
       where: { id: eventId },

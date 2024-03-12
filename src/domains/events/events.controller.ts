@@ -9,6 +9,13 @@ export class EventsController {
   getEventsByPage(@Query('page') page?: number) {
     return this.eventsService.getEvents(page ? page : 1);
   }
+  @Get('search')
+  searchEvents(
+    @Query('keywords') keywords: string = ' ',
+    @Query('page') page?: number,
+  ) {
+    return this.eventsService.searchEvents(keywords, page ? page : 1);
+  }
 
   @Get(':eventId')
   getEvent(@Param('eventId', ParseIntPipe) eventId: number) {
