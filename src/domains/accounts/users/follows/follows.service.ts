@@ -25,7 +25,9 @@ export class FollowsService {
         follower: {
           select: {
             id: true,
-            userProfile: { select: { nickname: true, profileImage: true } },
+            userProfile: {
+              select: { nickname: true, profileImage: true, description: true },
+            },
           },
         },
       },
@@ -43,7 +45,9 @@ export class FollowsService {
         following: {
           select: {
             id: true,
-            userProfile: { select: { nickname: true, profileImage: true } },
+            userProfile: {
+              select: { nickname: true, profileImage: true, description: true },
+            },
           },
         },
       },
