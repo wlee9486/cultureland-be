@@ -199,4 +199,14 @@ export class EventsService {
       }
     }
   }
+
+  async getCategories() {
+    const category = await this.prismaService.category.findMany({
+      select: { name: true, code: true },
+      distinct: ['name'],
+      orderBy: { code: 'asc' },
+    });
+    category.unshift({ name: '전체', code: 0 });
+    return category;
+  }
 }
