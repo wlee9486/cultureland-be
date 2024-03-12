@@ -5,8 +5,10 @@ import { compare, hash } from 'bcrypt';
 import uploadImageToS3 from 'src/aws/uploadImageToS3';
 import { PrismaService } from 'src/db/prisma/prisma.service';
 import { InvalidPasswordException } from 'src/exceptions/InvalidPassword.exception';
+import { PermissionDeniedToReadException } from 'src/exceptions/PermissionDeniedToRead.exception';
 import { UserNotFoundByEmail } from 'src/exceptions/UserNotFoundByEmail.exception';
 import { UserNotFoundById } from 'src/exceptions/UserNotFoundById.exception';
+import countReviewReactions from 'src/utils/countReviewReactions';
 import { AccountsService } from '../accounts.service';
 import {
   SignInRequestDto,
@@ -151,6 +153,45 @@ export class UsersService {
     );
 
     return attendedEvents;
+  }
+
+  async getLikedReviews(userId: number) {
+    const user = await this.prismaService.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user) throw new UserNotFoundById();
+    if (user.id !== userId) throw new PermissionDeniedToReadException();
+
+    const foundReactions = await this.prismaService.reviewReaction.findMany({
+      where: { AND: [{ userId }, { reactionValue: 1 }] },
+      select: {
+        review: {
+          select: {
+            id: true,
+            reviewerId: true,
+            eventId: true,
+            image: true,
+            rating: true,
+            content: true,
+            createdAt: true,
+            isVerified: true,
+            reviewReactions: {
+              select: {
+                userId: true,
+                reviewId: true,
+                reactionValue: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const likedReviews = foundReactions.map((review) => review.review);
+
+    const likedReviewsWithsReactionCounts = countReviewReactions(likedReviews);
+
+    return likedReviewsWithsReactionCounts;
   }
 
   async deleteReaction(user: User, reviewId: number) {

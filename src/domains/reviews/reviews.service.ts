@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { User } from '@prisma/client';
 import uploadImageToS3 from 'src/aws/uploadImageToS3';
 import { PrismaService } from 'src/db/prisma/prisma.service';
-import { PermissionDeniedException } from 'src/exceptions/PermissionDenied.exception';
+import { PermissionDeniedException } from 'src/exceptions/PermissionDeniedToRead.exception';
 import { ReviewNotFoundById } from 'src/exceptions/ReviewNotFoundById.exception';
 import {
   CreateReactionRequestDto,
