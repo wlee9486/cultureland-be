@@ -184,10 +184,10 @@ model Category {
 
 model BookingLink {
   id          Int          @id @default(autoincrement())
-  eventId     Int?
   link        String
   name        String
   eventDetail EventDetail? @relation(fields: [eventId], references: [eventId])
+  eventId     Int?
 
   @@unique([eventId, name])
 }

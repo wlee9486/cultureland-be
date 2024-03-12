@@ -14,6 +14,11 @@ export class EventsController {
     return this.eventsService.getEvents(page);
   }
 
+  @Get('/update')
+  updateEventReservationWebsite() {
+    return this.eventsService.updateEventReservationWebsite();
+  }
+
   @Get(':eventId')
   getEvent(@Param('eventId', ParseIntPipe) eventId: number) {
     return this.eventsService.getEvent(eventId);

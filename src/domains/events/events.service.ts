@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import * as cheerio from 'cheerio';
 import { PrismaService } from 'src/db/prisma/prisma.service';
 
 @Injectable()
@@ -87,5 +88,49 @@ export class EventsService {
         reviews: true,
       },
     });
+  }
+
+  async updateEventReservationWebsite() {
+    await this.prismaService.bookingLink.deleteMany();
+    const events = await this.prismaService.event.findMany({
+      select: { id: true, title: true, apiId: true },
+      where: { eventDetail: { eventStatus: { value: { not: '공연완료' } } } },
+    });
+
+    let count = 0;
+
+    for (const event of events) {
+      const { id, title, apiId } = event;
+
+      try {
+        const url = `https://www.kopis.or.kr/por/db/pblprfr/pblprfrView.do?menuId=MNU_00020&mt20Id=${apiId}`;
+        const response = await fetch(url);
+        const html = await response.text();
+        const $ = cheerio.load(html);
+        const serviceReservationLinks = $('#lpop04 a')
+          .map(function (_, el) {
+            return {
+              name: $(el).text(),
+              link: el.attribs['href'],
+            };
+          })
+          .toArray();
+
+        await this.prismaService.bookingLink.deleteMany({
+          where: { eventId: id },
+        });
+
+        const bookingLinks = await this.prismaService.bookingLink.createMany({
+          data: serviceReservationLinks.map(({ name, link }) => ({
+            eventId: id,
+            name,
+            link,
+          })),
+        });
+        console.log(`${++count}/${events.length}`, title, bookingLinks);
+      } catch (e) {
+        console.log(`${++count}/${events.length}`, title, '에러 발생', e);
+      }
+    }
   }
 }
