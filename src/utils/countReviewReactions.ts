@@ -1,11 +1,9 @@
-import {
-  ReviewResponseDto,
-  ReviewWithReactionsType,
-} from 'src/domains/reviews/reviews.dto';
+import { ReviewResponse } from 'src/types/ReviewResponse.type';
+import { ReviewWithReactionsPayload } from 'src/types/ReviewWithReactionsPayload.type';
 
 export default function countReviewReactions(
-  reviews: ReviewWithReactionsType[],
-): ReviewResponseDto[] {
+  reviews: ReviewWithReactionsPayload[],
+): ReviewResponse[] {
   return reviews.map((review) => ({
     ...review,
     likes: review.reviewReactions.filter(
