@@ -111,6 +111,7 @@ export class EventsService {
         reviews: true,
         _count: true,
       },
+      orderBy: { interestedUsers: { _count: 'desc' } },
       take: 5,
     });
 
