@@ -209,4 +209,12 @@ export class EventsService {
     category.unshift({ name: '전체', code: 0 });
     return category;
   }
+
+  async getAreas() {
+    return await this.prismaService.area.findMany({
+      select: { name: true, code: true },
+      distinct: ['name'],
+      orderBy: { code: 'asc' },
+    });
+  }
 }

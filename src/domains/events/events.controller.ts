@@ -5,6 +5,11 @@ import { EventsService } from './events.service';
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
+  @Get()
+  getEventsByPage(@Query('page') page?: number) {
+    return this.eventsService.getEvents(page ? page : 1);
+  }
+
   @Get('/search')
   searchEvents(
     @Query('keywords') keywords: string = ' ',
@@ -13,19 +18,19 @@ export class EventsController {
     return this.eventsService.searchEvents(keywords, page ? page : 1);
   }
 
-  @Get('/update')
-  updateEventReservationWebsite() {
-    return this.eventsService.updateEventReservationWebsite();
-  }
-
   @Get('/category')
   getCategories() {
     return this.eventsService.getCategories();
   }
 
-  @Get()
-  getEventsByPage(@Query('page') page?: number) {
-    return this.eventsService.getEvents(page ? page : 1);
+  @Get('/area')
+  getAreas() {
+    return this.eventsService.getAreas();
+  }
+
+  @Get('/update')
+  updateEventReservationWebsite() {
+    return this.eventsService.updateEventReservationWebsite();
   }
 
   @Get('/:eventId')
