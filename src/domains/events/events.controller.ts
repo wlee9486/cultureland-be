@@ -12,10 +12,13 @@ export class EventsController {
 
   @Get('/search')
   searchEvents(
-    @Query('keywords') keywords: string = ' ',
+    @Query('keywords') keywords: string,
     @Query('page') page?: number,
   ) {
-    return this.eventsService.searchEvents(keywords, page ? page : 1);
+    return this.eventsService.searchEvents(
+      keywords ? keywords : ' ',
+      page ? page : 1,
+    );
   }
 
   @Get('/category')
