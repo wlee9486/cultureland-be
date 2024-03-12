@@ -6,7 +6,11 @@ export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
   @Get()
-  getEvents(@Query('page', ParseIntPipe) page: number) {
+  getEvents() {
+    return this.eventsService.getEvents(1);
+  }
+  @Get()
+  getEventsByPage(@Query('page', ParseIntPipe) page: number) {
     return this.eventsService.getEvents(page);
   }
 

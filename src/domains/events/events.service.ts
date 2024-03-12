@@ -18,10 +18,14 @@ export class EventsService {
         venue: true,
         category: true,
         area: true,
+        _count: true,
       },
       orderBy: { startDate: 'desc' },
       skip: Number(pageSize) * (page - 1),
       take: Number(pageSize),
+    });
+    const eventsCount = await this.prismaService.event.count({
+      where: {},
     });
 
     const eventsWithAvgRating = await Promise.all(
@@ -40,7 +44,12 @@ export class EventsService {
         };
       }),
     );
-    return eventsWithAvgRating;
+
+    const data = {
+      events: eventsWithAvgRating,
+      totalEventsCnt: eventsCount,
+    };
+    return { data };
   }
 
   async getEvent(eventId: number) {
