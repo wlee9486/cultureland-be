@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/db/prisma/prisma.service';
+import { EventNotFoundByIdException } from 'src/exceptions/EventNotFoundById.exception';
 
 @Injectable()
 export class EventsService {
@@ -8,10 +9,10 @@ export class EventsService {
     private readonly prismaService: PrismaService,
     private readonly configService: ConfigService,
   ) {}
+
+  pageSize = this.configService.getOrThrow<number>('PAGESIZE_EVENT_LIST');
+
   async getEvents(page: number) {
-    const pageSize = this.configService.getOrThrow<number>(
-      'PAGESIZE_EVENT_LIST',
-    );
     const events = await this.prismaService.event.findMany({
       where: {},
       include: {
@@ -21,8 +22,8 @@ export class EventsService {
         _count: true,
       },
       orderBy: { startDate: 'desc' },
-      skip: Number(pageSize) * (page - 1),
-      take: Number(pageSize),
+      skip: Number(this.pageSize) * (page - 1),
+      take: Number(this.pageSize),
     });
     const eventsCount = await this.prismaService.event.count({
       where: {},
@@ -53,7 +54,7 @@ export class EventsService {
   }
 
   async getEvent(eventId: number) {
-    return await this.prismaService.event.findUniqueOrThrow({
+    const foundEvent = await this.prismaService.event.findUniqueOrThrow({
       where: { id: eventId },
       include: {
         area: true,
@@ -87,5 +88,21 @@ export class EventsService {
         reviews: true,
       },
     });
+    if (!foundEvent) throw new EventNotFoundByIdException();
+
+    const reviews = foundEvent.reviews;
+    const totalReviews = reviews.length;
+    let totalRating = 0;
+    for (const review of reviews) {
+      totalRating += review.rating;
+    }
+    const avgRating = totalReviews > 0 ? totalRating / totalReviews : 0;
+
+    const event = {
+      event: foundEvent,
+      avgRating: avgRating.toFixed(1),
+    };
+
+    return event;
   }
 }
