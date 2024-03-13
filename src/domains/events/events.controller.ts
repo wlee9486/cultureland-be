@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  Param,
-  ParseFloatPipe,
-  ParseIntPipe,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { EventsService } from './events.service';
 
 @Controller('events')
@@ -50,15 +43,6 @@ export class EventsController {
       orderBy ? orderBy : 'recent',
       page ? page : 1,
     );
-  }
-
-  @Get('/map')
-  searchEventsForMap(
-    @Query('la', ParseFloatPipe) la: number = 37.4786094,
-    @Query('lo', ParseFloatPipe) lo: number = 127.0113069,
-    @Query('category') category?: string,
-  ) {
-    return this.eventsService.searchEventsForMap(category, la, lo);
   }
 
   @Get('/category')
