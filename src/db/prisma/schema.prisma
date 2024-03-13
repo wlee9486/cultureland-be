@@ -1,6 +1,6 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearch", "postgresqlExtensions"]
+  previewFeatures = ["fullTextSearch"]
 }
 
 datasource db {
@@ -12,15 +12,15 @@ model User {
   id               Int                    @id @default(autoincrement())
   email            String                 @unique
   password         String?
+  provider         Provider?              @relation(fields: [providerId], references: [id])
+  providerId       Int?
   createdAt        DateTime               @default(now())
   updatedAt        DateTime               @updatedAt
   deletedAt        DateTime?
-  providerId       Int?
   followings       Follow[]               @relation("Followers")
   followers        Follow[]               @relation("Followings")
   reviews          Review[]
   reviewReactions  ReviewReaction[]
-  provider         Provider?              @relation(fields: [providerId], references: [id])
   attendedEvents   UserAttendedEvents[]
   interestedEvents UserInterestedEvents[]
   userProfile      UserProfile?
@@ -136,8 +136,6 @@ model Event {
   apiId           String                 @unique
   areaCode        Int
   categoryCode    Int
-  eventStatusCode Int
-  eventStatus     EventStatus            @relation(fields: [eventStatusCode], references: [code])
   area            Area                   @relation(fields: [areaCode], references: [code])
   category        Category               @relation(fields: [categoryCode], references: [code])
   partner         Partner                @relation(fields: [partnerId], references: [id])
@@ -162,17 +160,18 @@ model EventDetail {
   runtime            String
   timeInfo           String
   targetAudience     String
+  eventStatusCode    Int
   bookingLinks       BookingLink[]
   description_images EventDescriptionImage[]
   event              Event                   @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  eventStatusCode    Int?
+  eventStatus        EventStatus             @relation(fields: [eventStatusCode], references: [code])
 }
 
 model EventStatus {
-  code  Int     @id @default(autoincrement())
-  name  String
-  Event Event[]
-  value String  @unique
+  code        Int           @id @default(autoincrement())
+  name        String
+  value       String        @unique
+  eventDetail EventDetail[]
 }
 
 model Venue {

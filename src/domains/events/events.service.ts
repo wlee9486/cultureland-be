@@ -89,54 +89,6 @@ export class EventsService {
     return data;
   }
 
-  async searchEventsForMap(category: string, la: number, lo: number) {
-    const eventsWithDistance = (await this.prismaService.$queryRaw`
-      SELECT "Event".id, "Event"."venueId",
-        COALESCE(AVG("Review".rating), 0) AS averageRating,
-        earth_distance(
-          ll_to_earth("Venue".latitude, "Venue".longitude),
-          ll_to_earth(${la}, ${lo})
-        ) AS distance
-      FROM "Event"
-      JOIN "Category" ON "Category"."code" = "Event"."categoryCode"
-      JOIN "Venue" ON "Venue".id = "Event"."venueId"
-      JOIN "EventDetail" ON "EventDetail"."eventId" = "Event".id
-      JOIN "EventStatus" ON "EventStatus".code = "EventDetail"."eventStatusCode"
-      LEFT JOIN "Review" ON "Review"."eventId" = "Event".id
-      WHERE "EventStatus"."name" <> '마감' AND "Category"."name"= ${category}
-      GROUP BY "Event".id, "Venue".id
-      ORDER BY "distance"
-      LIMIT 20
-      `) as {
-      id: number;
-      venueId: number;
-      average_rating: string;
-      distance: number;
-    }[];
-
-    const eventIds = eventsWithDistance.map((event) => event.id);
-
-    const events = await this.prismaService.event.findMany({
-      where: { id: { in: eventIds } },
-      select: {
-        id: true,
-        title: true,
-        venue: { select: { name: true, latitude: true, longitude: true } },
-        category: { select: { name: true } },
-        _count: { select: { reviews: true } },
-      },
-    });
-
-    const result = events.map((event) => {
-      const eventWithDistance = eventsWithDistance.find(
-        (event) => event.id === event.id,
-      );
-      return { ...event, ...eventWithDistance };
-    });
-
-    return result;
-  }
-
   async searchEvents(
     keywords: string,
     category,
