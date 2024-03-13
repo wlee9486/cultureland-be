@@ -11,7 +11,9 @@ datasource db {
 model User {
   id               Int                    @id @default(autoincrement())
   email            String                 @unique
-  password         String
+  password         String?
+  provider         Provider?              @relation(fields: [providerId], references: [id])
+  providerId       Int?
   createdAt        DateTime               @default(now())
   updatedAt        DateTime               @updatedAt
   deletedAt        DateTime?
@@ -22,6 +24,12 @@ model User {
   attendedEvents   UserAttendedEvents[]
   interestedEvents UserInterestedEvents[]
   userProfile      UserProfile?
+}
+
+model Provider {
+  id       Int    @id @default(autoincrement())
+  provider String @unique
+  users    User[]
 }
 
 model UserProfile {
@@ -178,17 +186,17 @@ model Venue {
 
 model Category {
   code  Int     @id @default(autoincrement())
-  name  String
   value String  @unique
+  name  String
   event Event[]
 }
 
 model BookingLink {
   id          Int          @id @default(autoincrement())
+  eventId     Int?
   link        String
   name        String
   eventDetail EventDetail? @relation(fields: [eventId], references: [eventId])
-  eventId     Int?
 
   @@unique([eventId, name])
 }
