@@ -103,6 +103,41 @@ export class EventsService {
     return { data };
   }
 
+  async getFamousEvents() {
+    const famousEvents = await this.prismaService.event.findMany({
+      where: { eventDetail: { eventStatus: { isNot: { code: 3 } } } },
+      include: {
+        area: true,
+        reviews: true,
+        _count: true,
+      },
+      orderBy: { interestedUsers: { _count: 'desc' } },
+      take: 5,
+    });
+
+    const famousEventsWithAvgRating = await Promise.all(
+      famousEvents.map(async (event) => {
+        const aggregate = await this.prismaService.review.aggregate({
+          _avg: {
+            rating: true,
+          },
+          where: {
+            eventId: event.id,
+          },
+        });
+        return {
+          ...event,
+          avgRating: aggregate._avg.rating ? aggregate._avg.rating : 0,
+        };
+      }),
+    );
+    const data = {
+      event: famousEventsWithAvgRating,
+    };
+
+    return data;
+  }
+
   async getEvent(eventId: number) {
     const foundEvent = await this.prismaService.event.findUniqueOrThrow({
       where: { id: eventId },
@@ -148,12 +183,12 @@ export class EventsService {
     }
     const avgRating = totalReviews > 0 ? totalRating / totalReviews : 0;
 
-    const event = {
+    const data = {
       event: foundEvent,
       avgRating: avgRating.toFixed(1),
     };
 
-    return event;
+    return data;
   }
 
   async updateEventReservationWebsite() {

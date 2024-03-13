@@ -10,6 +10,11 @@ export class EventsController {
     return this.eventsService.getEvents(page ? page : 1);
   }
 
+  @Get('/home/famous')
+  getFamousEvents() {
+    return this.eventsService.getFamousEvents();
+  }
+
   @Get('/search')
   searchEvents(
     @Query('keywords') keywords: string = ' ',
