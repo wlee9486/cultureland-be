@@ -6,6 +6,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Query,
 } from '@nestjs/common';
 import { Prisma, User } from '@prisma/client';
 import { Private } from 'src/decorators/private.decorator';
@@ -30,8 +31,13 @@ export class InterestsController {
   getUsersInterests(
     @Param('userId', ParseIntPipe) userId: number,
     @DUser() loggedInUser?: User,
+    @Query('page') page?: number,
   ) {
-    return this.interestsService.getUsersInterests(userId, loggedInUser);
+    return this.interestsService.getUsersInterests(
+      userId,
+      loggedInUser,
+      page ? page : 1,
+    );
   }
 
   @Delete(':userId/:eventId')

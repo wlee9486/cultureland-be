@@ -11,6 +11,9 @@ export class InterestsService {
     private readonly prismaService: PrismaService,
     private readonly configService: ConfigService,
   ) {}
+
+  pageSize = this.configService.getOrThrow<number>('PAGESIZE_INTEREST_LIST');
+
   async createInterest(user: User, eventId: number) {
     return await this.prismaService.userInterestedEvents.upsert({
       where: {
@@ -27,15 +30,18 @@ export class InterestsService {
     });
   }
 
-  async getUsersInterests(userId: number, loggedInUser: User) {
+  async getUsersInterests(userId: number, loggedInUser: User, page: number) {
     const interests = await this.prismaService.userInterestedEvents.findMany({
       where: {
         userId,
       },
       select: { eventId: true },
+      orderBy: { createdAt: 'desc' },
+      skip: Number(this.pageSize) * (page - 1),
+      take: Number(this.pageSize),
     });
 
-    const isLoggedInUser = userId == +loggedInUser.id;
+    const isLoggedInUser = loggedInUser ? userId == loggedInUser.id : false;
 
     return {
       interests,
