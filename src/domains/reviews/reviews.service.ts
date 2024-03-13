@@ -3,13 +3,13 @@ import { ConfigService } from '@nestjs/config';
 import { User } from '@prisma/client';
 import uploadImageToS3 from 'src/aws/uploadImageToS3';
 import { PrismaService } from 'src/db/prisma/prisma.service';
-import { PermissionDeniedException } from 'src/exceptions/PermissionDenied.exception';
+import { PermissionDeniedToEditReviewException } from 'src/exceptions/PermissionDeniedToEditReview.exception';
 import { ReviewNotFoundById } from 'src/exceptions/ReviewNotFoundById.exception';
+import { ReviewResponse } from 'src/types/ReviewResponse.type';
+import countReviewReactions from 'src/utils/countReviewReactions';
 import {
   CreateReactionRequestDto,
   CreateReviewRequestDto,
-  ReviewResponseDto,
-  ReviewWithReactionsType,
   SortOrder,
 } from './reviews.dto';
 
@@ -75,7 +75,7 @@ export class ReviewsService {
     const foundReview = await this.findUniqueReview(reviewId);
     if (!foundReview) return new ReviewNotFoundById();
     if (userId !== foundReview.reviewerId)
-      throw new PermissionDeniedException();
+      throw new PermissionDeniedToEditReviewException();
 
     const updatedReview = await this.prismaService.review.update({
       where: { id: reviewId },
@@ -97,7 +97,7 @@ export class ReviewsService {
     const foundReview = await this.findUniqueReview(reviewId);
     if (!foundReview) return new ReviewNotFoundById();
     if (userId !== foundReview.reviewerId)
-      throw new PermissionDeniedException();
+      throw new PermissionDeniedToEditReviewException();
 
     await this.prismaService.review.delete({
       where: { id: reviewId },
@@ -151,24 +151,12 @@ export class ReviewsService {
       orderBy: { createdAt: 'desc' },
     });
 
-    const reviewsWithReactionCounts = this.countReactions(reviews);
+    const reviewsWithReactionCounts = countReviewReactions(reviews);
 
     return this.sortReviews(orderBy, reviewsWithReactionCounts);
   }
 
-  countReactions(reviews: ReviewWithReactionsType[]): ReviewResponseDto[] {
-    return reviews.map((review) => ({
-      ...review,
-      likes: review.reviewReactions.filter(
-        (reaction) => reaction.reactionValue === 1,
-      ).length,
-      hates: review.reviewReactions.filter(
-        (reaction) => reaction.reactionValue === -1,
-      ).length,
-    }));
-  }
-
-  sortReviews(orderBy: SortOrder, reviews: ReviewResponseDto[]) {
+  sortReviews(orderBy: SortOrder, reviews: ReviewResponse[]) {
     if (!orderBy || orderBy === 'recent') {
       return reviews;
     } else if (orderBy === 'likes') {

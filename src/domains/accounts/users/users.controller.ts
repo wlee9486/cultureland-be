@@ -144,4 +144,13 @@ export class UsersController {
   ) {
     return this.usersService.getAttendedEvents(userId);
   }
+
+  @Get(':userId/reactions')
+  @Private('user')
+  async getLikedReviews(
+    @Param('userId', ParseIntPipe)
+    userId: number,
+  ) {
+    return this.usersService.getLikedReviews(userId);
+  }
 }
