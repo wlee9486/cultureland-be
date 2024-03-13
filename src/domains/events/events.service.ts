@@ -80,6 +80,7 @@ export class EventsService {
         area: true,
         _count: true,
       },
+      take: 10,
     };
     const events = await this.prismaService.event.findMany(options);
     const data = {
