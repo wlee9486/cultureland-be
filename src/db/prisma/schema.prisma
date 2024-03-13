@@ -1,6 +1,6 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearch"]
+  previewFeatures = ["fullTextSearch", "postgresqlExtensions"]
 }
 
 datasource db {
@@ -12,15 +12,15 @@ model User {
   id               Int                    @id @default(autoincrement())
   email            String                 @unique
   password         String?
-  provider         Provider?              @relation(fields: [providerId], references: [id])
-  providerId       Int?
   createdAt        DateTime               @default(now())
   updatedAt        DateTime               @updatedAt
   deletedAt        DateTime?
+  providerId       Int?
   followings       Follow[]               @relation("Followers")
   followers        Follow[]               @relation("Followings")
   reviews          Review[]
   reviewReactions  ReviewReaction[]
+  provider         Provider?              @relation(fields: [providerId], references: [id])
   attendedEvents   UserAttendedEvents[]
   interestedEvents UserInterestedEvents[]
   userProfile      UserProfile?
