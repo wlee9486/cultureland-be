@@ -89,14 +89,30 @@ export class EventsService {
     return data;
   }
 
-  async searchEvents(keywords: string, page: number) {
-    const searchKey = keywords.replace(' ', ' | ');
+  async searchEvents(
+    keywords: string,
+    category,
+    area: string,
+    orderBy: 'recent' | 'popular',
+    page: number,
+  ) {
+    let searchKey;
+    if (keywords != ' ') searchKey = keywords.replace(' ', ' | ');
+
+    const orderOption = {};
+    if (orderBy == 'recent') {
+      orderOption['startDate'] = 'desc';
+    } else {
+      orderOption['interestedUsers'] = { _count: 'desc' };
+    }
+
     const options = {
       OR: [
         { title: { search: searchKey } },
         { category: { name: { search: searchKey } } },
         { area: { name: { search: searchKey } } },
       ],
+      AND: [{ category: { name: category } }, { area: { name: area } }],
     };
     const events = await this.prismaService.event.findMany({
       where: options,
@@ -106,7 +122,7 @@ export class EventsService {
         area: true,
         _count: true,
       },
-      orderBy: { startDate: 'desc' },
+      orderBy: orderOption,
       skip: Number(this.pageSize) * (page - 1),
       take: Number(this.pageSize),
     });
