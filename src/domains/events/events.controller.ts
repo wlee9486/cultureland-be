@@ -30,11 +30,17 @@ export class EventsController {
 
   @Get('/search')
   searchEvents(
-    @Query('keywords') keywords: string,
+    @Query('keywords') keywords?: string,
+    @Query('category') category?: string,
+    @Query('area') area?: string,
+    @Query('orderBy') orderBy?: undefined | 'recent' | 'popular',
     @Query('page') page?: number,
   ) {
     return this.eventsService.searchEvents(
       keywords ? keywords : ' ',
+      category,
+      area ? area : '서울',
+      orderBy ? orderBy : 'recent',
       page ? page : 1,
     );
   }
