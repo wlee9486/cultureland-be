@@ -4,6 +4,7 @@ import { User } from '@prisma/client';
 import uploadImageToS3 from 'src/aws/uploadImageToS3';
 import { PrismaService } from 'src/db/prisma/prisma.service';
 import { PermissionDeniedToEditReviewException } from 'src/exceptions/PermissionDeniedToEditReview.exception';
+import { PermissionDeniedToReadReviewException } from 'src/exceptions/PermissionDeniedToReadReview.exception';
 import { ReviewNotFoundById } from 'src/exceptions/ReviewNotFoundById.exception';
 import { ReviewResponse } from 'src/types/ReviewResponse.type';
 import countReviewReactions from 'src/utils/countReviewReactions';
@@ -61,7 +62,7 @@ export class ReviewsService {
       where: { id: reviewId },
     });
     if (review.reviewerId !== user.id) {
-      throw new PermissionDeniedException();
+      throw new PermissionDeniedToReadReviewException();
     }
 
     return review;
