@@ -56,6 +56,17 @@ export class ReviewsService {
     return review;
   }
 
+  async getReview(user: User, reviewId: number) {
+    const review = await this.prismaService.review.findUnique({
+      where: { id: reviewId },
+    });
+    if (review.reviewerId !== user.id) {
+      throw new PermissionDeniedException();
+    }
+
+    return review;
+  }
+
   async updateReview(
     user: User,
     reviewId: number,
