@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Partner, UserProfile } from '@prisma/client';
+import { Response } from 'express';
 import { sign } from 'jsonwebtoken';
 
 @Injectable()
@@ -37,5 +38,18 @@ export class AccountsService {
       });
       return accessToken;
     }
+  }
+
+  setAccessTokenCookie(response: Response, accessToken: string) {
+    const maxAge = Number(
+      this.configService.getOrThrow<string>('ACCESS_TOKEN_MAX_AGE'),
+    );
+    response.cookie('accessToken', accessToken, {
+      domain: process.env.FRONT_SERVER,
+      secure: true,
+      httpOnly: true,
+      sameSite: 'none',
+      maxAge,
+    });
   }
 }

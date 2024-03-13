@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { User } from '@prisma/client';
+import axios from 'axios';
 import { compare, hash } from 'bcrypt';
+import QueryString from 'qs';
 import uploadImageToS3 from 'src/aws/uploadImageToS3';
 import { PrismaService } from 'src/db/prisma/prisma.service';
 import { InvalidPasswordException } from 'src/exceptions/InvalidPassword.exception';
@@ -164,5 +166,91 @@ export class UsersService {
     });
 
     return reviewId;
+  }
+
+  async getKakaoAccessToken(code: string) {
+    const apiKey = process.env.KAKAO_REST_KEY;
+    const redirectUri = process.env.KAKAO_REDIRECT_URI;
+    const kakaoTokenUrl = 'https://kauth.kakao.com/oauth/token';
+
+    const body = {
+      grant_type: 'authorization_code',
+      client_id: apiKey,
+      redirect_uri: redirectUri,
+      code,
+    };
+    const headers = {
+      'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+    };
+
+    const response = await axios.post(
+      kakaoTokenUrl,
+      QueryString.stringify(body),
+      { headers },
+    );
+
+    if (response.status === 200) {
+      return response.data.access_token;
+    } else {
+      throw new Error('Failed to get access token from Kakao');
+    }
+  }
+
+  async getKakaoUserInfo(accessToken: string) {
+    const kakaoUserInfoUrl = 'https://kapi.kakao.com/v2/user/me';
+    const headers = {
+      'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+      Authorization: `Bearer ${accessToken}`,
+    };
+
+    const response = await axios.get(kakaoUserInfoUrl, { headers });
+
+    if (response.status === 200) {
+      return response.data;
+    } else {
+      throw new Error('Failed to get user info from Kakao');
+    }
+  }
+
+  async kakaoSignIn(code: string): Promise<any> {
+    const accessToken = await this.getKakaoAccessToken(code);
+    const userInfo = await this.getKakaoUserInfo(accessToken);
+    const { profile, email } = userInfo.kakao_account;
+    const { nickname, profile_image_url } = profile;
+
+    let user;
+
+    user = await this.prismaService.user.findUnique({
+      where: { email },
+      include: { userProfile: true },
+    });
+    if (!user) {
+      user = await this.prismaService.user.create({
+        data: {
+          email,
+          provider: {
+            connectOrCreate: {
+              where: {
+                provider: 'kakao',
+              },
+              create: {
+                provider: 'kakao',
+              },
+            },
+          },
+          userProfile: {
+            create: {
+              nickname,
+              profileImage: profile_image_url,
+              description: '컬처랜드로 모여락!',
+            },
+          },
+        },
+        include: { userProfile: true },
+      });
+    }
+    console.log(user);
+
+    return this.accountsService.generateAccessToken(user.userProfile, 'user');
   }
 }

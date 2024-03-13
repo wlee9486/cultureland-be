@@ -1,12 +1,14 @@
 import { Body, Controller, Get, Post, Query, Res } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
+import { AccountsService } from '../accounts.service';
 import { SignInRequestDto, SignUpRequestDto } from './partners.dto';
 import { PartnersService } from './partners.service';
 
 @Controller('accounts/partners')
 export class PartnersController {
   constructor(
+    private readonly accountsService: AccountsService,
     private readonly configService: ConfigService,
     private readonly partnersService: PartnersService,
   ) {}
@@ -29,13 +31,7 @@ export class PartnersController {
   ) {
     const accessToken = await this.partnersService.signUp(dto);
 
-    response.cookie('accessToken', accessToken, {
-      domain: process.env.BACKEND_SERVER,
-      secure: true,
-      httpOnly: true,
-      sameSite: 'none',
-      maxAge: this.maxAge,
-    });
+    this.accountsService.setAccessTokenCookie(response, accessToken);
 
     return accessToken;
   }
@@ -47,13 +43,7 @@ export class PartnersController {
   ) {
     const accessToken = await this.partnersService.signIn(dto);
 
-    response.cookie('accessToken', accessToken, {
-      domain: process.env.BACKEND_SERVER,
-      secure: true,
-      httpOnly: true,
-      sameSite: 'none',
-      maxAge: this.maxAge,
-    });
+    this.accountsService.setAccessTokenCookie(response, accessToken);
 
     return accessToken;
   }

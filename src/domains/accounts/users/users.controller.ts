@@ -7,6 +7,7 @@ import {
   Post,
   Put,
   Query,
+  Req,
   Res,
   UploadedFile,
   UseInterceptors,
@@ -14,9 +15,10 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { User } from '@prisma/client';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { Private } from 'src/decorators/private.decorator';
 import { DUser } from 'src/decorators/user.decorator';
+import { AccountsService } from './../accounts.service';
 import {
   SignInRequestDto,
   SignUpRequestDto,
@@ -27,6 +29,7 @@ import { UsersService } from './users.service';
 @Controller('accounts/users')
 export class UsersController {
   constructor(
+    private readonly accountsService: AccountsService,
     private readonly configService: ConfigService,
     private readonly usersService: UsersService,
   ) {}
@@ -35,8 +38,21 @@ export class UsersController {
     this.configService.getOrThrow<string>('ACCESS_TOKEN_MAX_AGE'),
   );
 
+  @Get('kakao-callback')
+  async kakaoSignIn(
+    @Query('code') code: string,
+    @Req() request: Request,
+    @Res() response: Response,
+  ) {
+    const accessToken = await this.usersService.kakaoSignIn(code);
+
+    this.accountsService.setAccessTokenCookie(response, accessToken);
+
+    response.redirect(request.headers.referer);
+  }
+
   @Get('email-check')
-  async emailCheck(@Query('email') email) {
+  async emailCheck(@Query('email') email: string) {
     const isExistingEmail = await this.usersService.emailCheck(email);
 
     return isExistingEmail;
@@ -49,13 +65,7 @@ export class UsersController {
   ) {
     const accessToken = await this.usersService.signUp(dto);
 
-    response.cookie('accessToken', accessToken, {
-      domain: process.env.BACKEND_SERVER,
-      secure: true,
-      httpOnly: true,
-      sameSite: 'none',
-      maxAge: this.maxAge,
-    });
+    this.accountsService.setAccessTokenCookie(response, accessToken);
 
     return accessToken;
   }
@@ -67,13 +77,7 @@ export class UsersController {
   ) {
     const accessToken = await this.usersService.signIn(dto);
 
-    response.cookie('accessToken', accessToken, {
-      domain: process.env.BACKEND_SERVER,
-      secure: true,
-      httpOnly: true,
-      sameSite: 'none',
-      maxAge: this.maxAge,
-    });
+    this.accountsService.setAccessTokenCookie(response, accessToken);
 
     return accessToken;
   }
@@ -98,13 +102,7 @@ export class UsersController {
   ) {
     const accessToken = await this.usersService.refreshToken(user);
 
-    response.cookie('accessToken', accessToken, {
-      domain: process.env.BACKEND_SERVER,
-      secure: true,
-      httpOnly: true,
-      sameSite: 'none',
-      maxAge: this.maxAge,
-    });
+    this.accountsService.setAccessTokenCookie(response, accessToken);
 
     return accessToken;
   }
@@ -134,13 +132,7 @@ export class UsersController {
       profileImage,
     );
 
-    response.cookie('accessToken', accessToken, {
-      domain: process.env.BACKEND_SERVER,
-      secure: true,
-      httpOnly: true,
-      sameSite: 'none',
-      maxAge: this.maxAge,
-    });
+    this.accountsService.setAccessTokenCookie(response, accessToken);
 
     return accessToken;
   }
