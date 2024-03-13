@@ -23,6 +23,11 @@ export class EventsController {
     );
   }
 
+  @Get('/home/famous')
+  getFamousEvents() {
+    return this.eventsService.getFamousEvents();
+  }
+
   @Get('/search')
   searchEvents(
     @Query('keywords') keywords: string,
