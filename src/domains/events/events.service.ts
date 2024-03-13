@@ -54,6 +54,40 @@ export class EventsService {
     return { data };
   }
 
+  async getEventsForHome(
+    category,
+    area: string,
+    orderBy: 'recent' | 'popular',
+  ) {
+    const orderOption = {};
+    if (orderBy == 'recent') {
+      orderOption['startDate'] = 'desc';
+    } else {
+      orderOption['interestedUsers'] = { _count: 'desc' };
+    }
+    const options = {
+      where: {
+        AND: [
+          { category: { name: category } },
+          { area: { name: area } },
+          { eventDetail: { eventStatus: { isNot: { code: 3 } } } },
+        ],
+      },
+      orderBy: orderOption,
+      include: {
+        venue: true,
+        category: true,
+        area: true,
+        _count: true,
+      },
+    };
+    const events = await this.prismaService.event.findMany(options);
+    const data = {
+      events,
+    };
+    return data;
+  }
+
   async searchEvents(keywords: string, page: number) {
     const searchKey = keywords.replace(' ', ' | ');
     const options = {

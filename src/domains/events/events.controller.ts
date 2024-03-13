@@ -10,6 +10,19 @@ export class EventsController {
     return this.eventsService.getEvents(page ? page : 1);
   }
 
+  @Get('/home?')
+  getEventsForHome(
+    @Query('category') category?: string,
+    @Query('area') area?: string,
+    @Query('orderBy') orderBy?: undefined | 'recent' | 'popular',
+  ) {
+    return this.eventsService.getEventsForHome(
+      category,
+      area ? area : '서울',
+      orderBy ? orderBy : 'recent',
+    );
+  }
+
   @Get('/search')
   searchEvents(
     @Query('keywords') keywords: string,
