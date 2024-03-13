@@ -44,8 +44,9 @@ export class AccountsService {
     const maxAge = Number(
       this.configService.getOrThrow<string>('ACCESS_TOKEN_MAX_AGE'),
     );
+
     response.cookie('accessToken', accessToken, {
-      domain: process.env.FRONT_SERVER,
+      domain: process.env.BACKEND_SERVER,
       secure: true,
       httpOnly: true,
       sameSite: 'none',
