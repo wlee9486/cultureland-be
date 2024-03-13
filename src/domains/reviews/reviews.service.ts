@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { User } from '@prisma/client';
 import uploadImageToS3 from 'src/aws/uploadImageToS3';
 import { PrismaService } from 'src/db/prisma/prisma.service';
-import { PermissionDeniedToEditException } from 'src/exceptions/PermissionDeniedToEdit.exception';
+import { PermissionDeniedToEditReviewException } from 'src/exceptions/PermissionDeniedToEditReview.exception';
 import { ReviewNotFoundById } from 'src/exceptions/ReviewNotFoundById.exception';
 import { ReviewResponse } from 'src/types/ReviewResponse.type';
 import countReviewReactions from 'src/utils/countReviewReactions';
@@ -75,7 +75,7 @@ export class ReviewsService {
     const foundReview = await this.findUniqueReview(reviewId);
     if (!foundReview) return new ReviewNotFoundById();
     if (userId !== foundReview.reviewerId)
-      throw new PermissionDeniedToEditException();
+      throw new PermissionDeniedToEditReviewException();
 
     const updatedReview = await this.prismaService.review.update({
       where: { id: reviewId },
@@ -97,7 +97,7 @@ export class ReviewsService {
     const foundReview = await this.findUniqueReview(reviewId);
     if (!foundReview) return new ReviewNotFoundById();
     if (userId !== foundReview.reviewerId)
-      throw new PermissionDeniedToEditException();
+      throw new PermissionDeniedToEditReviewException();
 
     await this.prismaService.review.delete({
       where: { id: reviewId },

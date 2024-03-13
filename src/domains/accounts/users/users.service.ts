@@ -5,7 +5,7 @@ import { compare, hash } from 'bcrypt';
 import uploadImageToS3 from 'src/aws/uploadImageToS3';
 import { PrismaService } from 'src/db/prisma/prisma.service';
 import { InvalidPasswordException } from 'src/exceptions/InvalidPassword.exception';
-import { PermissionDeniedToReadException } from 'src/exceptions/PermissionDeniedToRead.exception';
+import { PermissionDeniedToReadReviewException } from 'src/exceptions/PermissionDeniedToReadReview.exception';
 import { UserNotFoundByEmail } from 'src/exceptions/UserNotFoundByEmail.exception';
 import { UserNotFoundById } from 'src/exceptions/UserNotFoundById.exception';
 import countReviewReactions from 'src/utils/countReviewReactions';
@@ -160,7 +160,7 @@ export class UsersService {
       where: { id: userId },
     });
     if (!user) throw new UserNotFoundById();
-    if (user.id !== userId) throw new PermissionDeniedToReadException();
+    if (user.id !== userId) throw new PermissionDeniedToReadReviewException();
 
     const foundReactions = await this.prismaService.reviewReaction.findMany({
       where: { AND: [{ userId }, { reactionValue: 1 }] },
