@@ -127,7 +127,7 @@ export class EventsService {
       },
     });
 
-    const result git = events.map((event) => {
+    const result = events.map((event) => {
       const eventWithDistance = eventsWithDistance.find(
         (event) => event.id === event.id,
       );
