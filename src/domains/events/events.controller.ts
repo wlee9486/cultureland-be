@@ -10,6 +10,19 @@ export class EventsController {
     return this.eventsService.getEvents(page ? page : 1);
   }
 
+  @Get('/home?')
+  getEventsForHome(
+    @Query('category') category?: string,
+    @Query('area') area?: string,
+    @Query('orderBy') orderBy?: undefined | 'recent' | 'popular',
+  ) {
+    return this.eventsService.getEventsForHome(
+      category,
+      area ? area : '서울',
+      orderBy ? orderBy : 'recent',
+    );
+  }
+
   @Get('/home/famous')
   getFamousEvents() {
     return this.eventsService.getFamousEvents();
@@ -17,10 +30,13 @@ export class EventsController {
 
   @Get('/search')
   searchEvents(
-    @Query('keywords') keywords: string = ' ',
+    @Query('keywords') keywords: string,
     @Query('page') page?: number,
   ) {
-    return this.eventsService.searchEvents(keywords, page ? page : 1);
+    return this.eventsService.searchEvents(
+      keywords ? keywords : ' ',
+      page ? page : 1,
+    );
   }
 
   @Get('/category')
