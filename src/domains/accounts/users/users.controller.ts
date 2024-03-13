@@ -17,6 +17,7 @@ import { User } from '@prisma/client';
 import { Response } from 'express';
 import { Private } from 'src/decorators/private.decorator';
 import { DUser } from 'src/decorators/user.decorator';
+import { AccountsService } from './../accounts.service';
 import {
   SignInRequestDto,
   SignUpRequestDto,
@@ -27,6 +28,7 @@ import { UsersService } from './users.service';
 @Controller('accounts/users')
 export class UsersController {
   constructor(
+    private readonly accountsService: AccountsService,
     private readonly configService: ConfigService,
     private readonly usersService: UsersService,
   ) {}
@@ -35,8 +37,28 @@ export class UsersController {
     this.configService.getOrThrow<string>('ACCESS_TOKEN_MAX_AGE'),
   );
 
+  @Get('kakao-callback')
+  async kakaoSignIn(
+    @Query('code') code: string,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const accessToken = await this.usersService.kakaoSignIn(code);
+
+    // response.cookie('accessToken', accessToken, {
+    //   domain: process.env.FRONT_SERVER,
+    //   secure: true,
+    //   httpOnly: true,
+    //   sameSite: 'none',
+    //   maxAge: this.maxAge,
+    // });
+
+    this.accountsService.setAccessTokenCookie(response, accessToken);
+
+    return accessToken;
+  }
+
   @Get('email-check')
-  async emailCheck(@Query('email') email) {
+  async emailCheck(@Query('email') email: string) {
     const isExistingEmail = await this.usersService.emailCheck(email);
 
     return isExistingEmail;
@@ -49,6 +71,7 @@ export class UsersController {
   ) {
     const accessToken = await this.usersService.signUp(dto);
 
+<<<<<<< Updated upstream
     response.cookie('accessToken', accessToken, {
       domain: process.env.BACKEND_SERVER,
       secure: true,
@@ -56,6 +79,9 @@ export class UsersController {
       sameSite: 'none',
       maxAge: this.maxAge,
     });
+=======
+    this.accountsService.setAccessTokenCookie(response, accessToken);
+>>>>>>> Stashed changes
 
     return accessToken;
   }
@@ -67,6 +93,7 @@ export class UsersController {
   ) {
     const accessToken = await this.usersService.signIn(dto);
 
+<<<<<<< Updated upstream
     response.cookie('accessToken', accessToken, {
       domain: process.env.BACKEND_SERVER,
       secure: true,
@@ -74,6 +101,9 @@ export class UsersController {
       sameSite: 'none',
       maxAge: this.maxAge,
     });
+=======
+    this.accountsService.setAccessTokenCookie(response, accessToken);
+>>>>>>> Stashed changes
 
     return accessToken;
   }
@@ -98,13 +128,7 @@ export class UsersController {
   ) {
     const accessToken = await this.usersService.refreshToken(user);
 
-    response.cookie('accessToken', accessToken, {
-      domain: process.env.BACKEND_SERVER,
-      secure: true,
-      httpOnly: true,
-      sameSite: 'none',
-      maxAge: this.maxAge,
-    });
+    this.accountsService.setAccessTokenCookie(response, accessToken);
 
     return accessToken;
   }
@@ -134,6 +158,7 @@ export class UsersController {
       profileImage,
     );
 
+<<<<<<< Updated upstream
     response.cookie('accessToken', accessToken, {
       domain: process.env.BACKEND_SERVER,
       secure: true,
@@ -141,6 +166,9 @@ export class UsersController {
       sameSite: 'none',
       maxAge: this.maxAge,
     });
+=======
+    this.accountsService.setAccessTokenCookie(response, accessToken);
+>>>>>>> Stashed changes
 
     return accessToken;
   }
