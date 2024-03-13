@@ -90,23 +90,22 @@ export class EventsService {
   }
 
   async searchEventsForMap(category: string, la: number, lo: number) {
-    // 가장 가까운 이벤트 검색
-    console.log('la', typeof la, la);
-    console.log('la', typeof lo, lo);
     const nearestEvents = await this.prismaService.$queryRaw`
-      SELECT "Event".*, "Venue".*, "Category".*,
-        earth_distance(
-          ll_to_earth("Venue".latitude, "Venue".longitude),
-          ll_to_earth(${la}, ${lo})
-        ) AS distance
-      FROM "Event"
-      JOIN "Venue" ON "Venue".id = "Event"."venueId"
-      JOIN "Category" ON "Category".code = "Event"."categoryCode"
-      ORDER BY distance
-      LIMIT 20;
-    `;
+      SELECT "Event".*, "Venue".*, "Category".*, 
+          COALESCE(AVG("Review".rating), 0) AS average_rating,
+          earth_distance(
+            ll_to_earth("Venue".latitude, "Venue".longitude),
+            ll_to_earth(${la}, ${lo})
+          ) AS distance
+        FROM "Event"
+        JOIN "Venue" ON "Venue".id = "Event"."venueId"
+        JOIN "Category" ON "Category".code = "Event"."categoryCode"
+        LEFT JOIN "Review" ON "Review"."eventId" = "Event".id
+        GROUP BY "Event".id, "Venue".id, "Category".code
+        ORDER BY distance
+        LIMIT 20
+      `;
 
-    // 결과 반환
     const data = {
       events: nearestEvents,
     };
