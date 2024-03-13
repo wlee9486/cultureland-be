@@ -136,6 +136,8 @@ model Event {
   apiId           String                 @unique
   areaCode        Int
   categoryCode    Int
+  eventStatusCode Int
+  eventStatus     EventStatus            @relation(fields: [eventStatusCode], references: [code])
   area            Area                   @relation(fields: [areaCode], references: [code])
   category        Category               @relation(fields: [categoryCode], references: [code])
   partner         Partner                @relation(fields: [partnerId], references: [id])
@@ -160,18 +162,17 @@ model EventDetail {
   runtime            String
   timeInfo           String
   targetAudience     String
-  eventStatusCode    Int
   bookingLinks       BookingLink[]
   description_images EventDescriptionImage[]
   event              Event                   @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  eventStatus        EventStatus             @relation(fields: [eventStatusCode], references: [code])
+  eventStatusCode    Int?
 }
 
 model EventStatus {
-  code        Int           @id @default(autoincrement())
-  name        String
-  value       String        @unique
-  eventDetail EventDetail[]
+  code  Int     @id @default(autoincrement())
+  name  String
+  Event Event[]
+  value String  @unique
 }
 
 model Venue {
