@@ -1,4 +1,11 @@
-import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseFloatPipe,
+  ParseIntPipe,
+  Query,
+} from '@nestjs/common';
 import { EventsService } from './events.service';
 
 @Controller('events')
@@ -26,6 +33,15 @@ export class EventsController {
   @Get('/home/famous')
   getFamousEvents() {
     return this.eventsService.getFamousEvents();
+  }
+
+  @Get('/map')
+  searchEventsForMap(
+    @Query('category') category?: string,
+    @Query('la', ParseFloatPipe) la?: number,
+    @Query('lo', ParseFloatPipe) lo?: number,
+  ) {
+    return this.eventsService.searchEventsForMap(category, la, lo);
   }
 
   @Get('/search')
