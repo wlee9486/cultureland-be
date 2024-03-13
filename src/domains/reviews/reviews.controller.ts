@@ -41,6 +41,18 @@ export class ReviewsController {
     return await this.reviewsService.createReview(user, dto, image);
   }
 
+  @Get(':reviewId')
+  @Private('user')
+  async getReview(
+    @Req() req: Request,
+    @Param('reviewId', ParseIntPipe)
+    reviewId: number,
+  ) {
+    const user: User = req.user;
+
+    return await this.reviewsService.getReview(user, reviewId);
+  }
+
   @Put(':reviewId')
   @Private('user')
   @UseInterceptors(FileInterceptor('image'))
