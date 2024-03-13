@@ -7,6 +7,7 @@ import {
   Post,
   Put,
   Query,
+  Req,
   Res,
   UploadedFile,
   UseInterceptors,
@@ -14,7 +15,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { User } from '@prisma/client';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { Private } from 'src/decorators/private.decorator';
 import { DUser } from 'src/decorators/user.decorator';
 import { AccountsService } from './../accounts.service';
@@ -40,21 +41,14 @@ export class UsersController {
   @Get('kakao-callback')
   async kakaoSignIn(
     @Query('code') code: string,
-    @Res({ passthrough: true }) response: Response,
+    @Req() request: Request,
+    @Res() response: Response,
   ) {
     const accessToken = await this.usersService.kakaoSignIn(code);
 
-    // response.cookie('accessToken', accessToken, {
-    //   domain: process.env.FRONT_SERVER,
-    //   secure: true,
-    //   httpOnly: true,
-    //   sameSite: 'none',
-    //   maxAge: this.maxAge,
-    // });
-
     this.accountsService.setAccessTokenCookie(response, accessToken);
 
-    return accessToken;
+    response.redirect(request.headers.referer);
   }
 
   @Get('email-check')
@@ -71,17 +65,7 @@ export class UsersController {
   ) {
     const accessToken = await this.usersService.signUp(dto);
 
-<<<<<<< Updated upstream
-    response.cookie('accessToken', accessToken, {
-      domain: process.env.BACKEND_SERVER,
-      secure: true,
-      httpOnly: true,
-      sameSite: 'none',
-      maxAge: this.maxAge,
-    });
-=======
     this.accountsService.setAccessTokenCookie(response, accessToken);
->>>>>>> Stashed changes
 
     return accessToken;
   }
@@ -93,17 +77,7 @@ export class UsersController {
   ) {
     const accessToken = await this.usersService.signIn(dto);
 
-<<<<<<< Updated upstream
-    response.cookie('accessToken', accessToken, {
-      domain: process.env.BACKEND_SERVER,
-      secure: true,
-      httpOnly: true,
-      sameSite: 'none',
-      maxAge: this.maxAge,
-    });
-=======
     this.accountsService.setAccessTokenCookie(response, accessToken);
->>>>>>> Stashed changes
 
     return accessToken;
   }
@@ -158,17 +132,7 @@ export class UsersController {
       profileImage,
     );
 
-<<<<<<< Updated upstream
-    response.cookie('accessToken', accessToken, {
-      domain: process.env.BACKEND_SERVER,
-      secure: true,
-      httpOnly: true,
-      sameSite: 'none',
-      maxAge: this.maxAge,
-    });
-=======
     this.accountsService.setAccessTokenCookie(response, accessToken);
->>>>>>> Stashed changes
 
     return accessToken;
   }
