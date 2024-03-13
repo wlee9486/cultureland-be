@@ -54,6 +54,41 @@ export class EventsService {
     return { data };
   }
 
+  async getEventsForHome(
+    category,
+    area: string,
+    orderBy: 'recent' | 'popular',
+  ) {
+    const orderOption = {};
+    if (orderBy == 'recent') {
+      orderOption['startDate'] = 'desc';
+    } else {
+      orderOption['interestedUsers'] = { _count: 'desc' };
+    }
+    const options = {
+      where: {
+        AND: [
+          { category: { name: category } },
+          { area: { name: area } },
+          { eventDetail: { eventStatus: { isNot: { code: 3 } } } },
+        ],
+      },
+      orderBy: orderOption,
+      include: {
+        venue: true,
+        category: true,
+        area: true,
+        _count: true,
+      },
+      take: 10,
+    };
+    const events = await this.prismaService.event.findMany(options);
+    const data = {
+      events,
+    };
+    return data;
+  }
+
   async searchEvents(keywords: string, page: number) {
     const searchKey = keywords.replace(' ', ' | ');
     const options = {
@@ -103,6 +138,41 @@ export class EventsService {
     return { data };
   }
 
+  async getFamousEvents() {
+    const famousEvents = await this.prismaService.event.findMany({
+      where: { eventDetail: { eventStatus: { isNot: { code: 3 } } } },
+      include: {
+        area: true,
+        reviews: true,
+        _count: true,
+      },
+      orderBy: { interestedUsers: { _count: 'desc' } },
+      take: 5,
+    });
+
+    const famousEventsWithAvgRating = await Promise.all(
+      famousEvents.map(async (event) => {
+        const aggregate = await this.prismaService.review.aggregate({
+          _avg: {
+            rating: true,
+          },
+          where: {
+            eventId: event.id,
+          },
+        });
+        return {
+          ...event,
+          avgRating: aggregate._avg.rating ? aggregate._avg.rating : 0,
+        };
+      }),
+    );
+    const data = {
+      event: famousEventsWithAvgRating,
+    };
+
+    return data;
+  }
+
   async getEvent(eventId: number) {
     const foundEvent = await this.prismaService.event.findUniqueOrThrow({
       where: { id: eventId },
@@ -148,12 +218,12 @@ export class EventsService {
     }
     const avgRating = totalReviews > 0 ? totalRating / totalReviews : 0;
 
-    const event = {
+    const data = {
       event: foundEvent,
       avgRating: avgRating.toFixed(1),
     };
 
-    return event;
+    return data;
   }
 
   async updateEventReservationWebsite() {
@@ -198,5 +268,23 @@ export class EventsService {
         console.log(`${++count}/${events.length}`, title, '에러 발생', e);
       }
     }
+  }
+
+  async getCategories() {
+    const category = await this.prismaService.category.findMany({
+      select: { name: true, code: true },
+      distinct: ['name'],
+      orderBy: { code: 'asc' },
+    });
+    category.unshift({ name: '전체', code: 0 });
+    return category;
+  }
+
+  async getAreas() {
+    return await this.prismaService.area.findMany({
+      select: { name: true, code: true },
+      distinct: ['name'],
+      orderBy: { code: 'asc' },
+    });
   }
 }
