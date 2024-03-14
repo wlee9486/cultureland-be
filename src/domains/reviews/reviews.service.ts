@@ -221,6 +221,17 @@ export class ReviewsService {
         id: true,
         reviewerId: true,
         eventId: true,
+        event: {
+          select: {
+            id: true,
+            title: true,
+            startDate: true,
+            endDate: true,
+            poster: true,
+            category: { select: { name: true } },
+            venue: { select: { id: true, name: true } },
+          },
+        },
         image: true,
         rating: true,
         content: true,

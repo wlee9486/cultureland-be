@@ -221,15 +221,15 @@ export class UsersService {
       'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
     };
 
-    const response = await axios.post(
-      kakaoTokenUrl,
-      QueryString.stringify(body),
-      { headers },
-    );
+    try {
+      const response = await axios.post(
+        kakaoTokenUrl,
+        QueryString.stringify(body),
+        { headers },
+      );
 
-    if (response.status === 200) {
       return response.data.access_token;
-    } else {
+    } catch (e) {
       throw new Error('Failed to get access token from Kakao');
     }
   }
