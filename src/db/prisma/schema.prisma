@@ -94,17 +94,19 @@ model UserAttendedEvents {
   userId       Int
   eventId      Int
   receiptImage String
-  event        Event  @relation(fields: [eventId], references: [id])
-  user         User   @relation(fields: [userId], references: [id])
+  event        Event    @relation(fields: [eventId], references: [id])
+  user         User     @relation(fields: [userId], references: [id])
+  createdAt    DateTime @default(now())
 
   @@id([userId, eventId])
 }
 
 model UserInterestedEvents {
-  userId  Int
-  eventId Int
-  event   Event @relation(fields: [eventId], references: [id])
-  user    User  @relation(fields: [userId], references: [id])
+  userId    Int
+  eventId   Int
+  event     Event    @relation(fields: [eventId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
 
   @@id([userId, eventId])
 }
