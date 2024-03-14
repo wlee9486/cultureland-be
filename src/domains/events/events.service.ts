@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Prisma } from '@prisma/client';
 import * as cheerio from 'cheerio';
 import { PrismaService } from 'src/db/prisma/prisma.service';
 import { EventNotFoundByIdException } from 'src/exceptions/EventNotFoundById.exception';
@@ -65,10 +66,12 @@ export class EventsService {
     } else {
       orderOption['interestedUsers'] = { _count: 'desc' };
     }
+    const categoryOption = {};
+    if (category !== '전체') categoryOption['name'] = category;
     const options = {
       where: {
         AND: [
-          { category: { name: category } },
+          { category: categoryOption },
           { area: { name: area } },
           { eventDetail: { eventStatus: { isNot: { code: 3 } } } },
         ],
@@ -90,6 +93,8 @@ export class EventsService {
   }
 
   async searchEventsForMap(category: string, la: number, lo: number) {
+    console.log(category);
+    category == '전체' ? undefined : category;
     const eventsWithDistance = (await this.prismaService.$queryRaw`
       SELECT "Event".id, "Event"."venueId",
         COALESCE(AVG("Review".rating), 0) AS averageRating,
@@ -103,7 +108,9 @@ export class EventsService {
       JOIN "EventDetail" ON "EventDetail"."eventId" = "Event".id
       JOIN "EventStatus" ON "EventStatus".code = "EventDetail"."eventStatusCode"
       LEFT JOIN "Review" ON "Review"."eventId" = "Event".id
-      WHERE "EventStatus"."name" <> '마감' AND "Category"."name"= ${category}
+      WHERE "EventStatus"."name" <> '마감' ${
+        category ? Prisma.sql`AND "Category"."name = ${category}` : Prisma.empty
+      }
       GROUP BY "Event".id, "Venue".id
       ORDER BY "distance"
       LIMIT 20
