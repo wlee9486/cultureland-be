@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Prisma } from '@prisma/client';
 import * as cheerio from 'cheerio';
 import { PrismaService } from 'src/db/prisma/prisma.service';
 import { EventNotFoundByIdException } from 'src/exceptions/EventNotFoundById.exception';
@@ -13,9 +14,32 @@ export class EventsService {
 
   pageSize = this.configService.getOrThrow<number>('PAGESIZE_EVENT_LIST');
 
-  async getEvents(page: number) {
+  async getEvents(
+    category,
+    area: string,
+    orderBy: 'recent' | 'popular',
+    page: number,
+  ) {
+    const orderOption = {};
+    if (orderBy == 'recent') {
+      orderOption['startDate'] = 'desc';
+    } else {
+      orderOption['interestedUsers'] = { _count: 'desc' };
+    }
+    const categoryOption = {};
+    if (category !== '전체') categoryOption['name'] = category;
+    const areaOption = {};
+    if (area) areaOption['name'] = area;
+
+    const options = {
+      AND: [
+        { category: categoryOption },
+        { area: areaOption },
+        { eventDetail: { eventStatus: { isNot: { code: 3 } } } },
+      ],
+    };
     const events = await this.prismaService.event.findMany({
-      where: {},
+      where: options,
       include: {
         venue: true,
         category: true,
@@ -27,7 +51,7 @@ export class EventsService {
       take: Number(this.pageSize),
     });
     const eventsCount = await this.prismaService.event.count({
-      where: {},
+      where: options,
     });
 
     const eventsWithAvgRating = await Promise.all(
@@ -65,11 +89,15 @@ export class EventsService {
     } else {
       orderOption['interestedUsers'] = { _count: 'desc' };
     }
+    const categoryOption = {};
+    if (category !== '전체') categoryOption['name'] = category;
+    const areaOption = {};
+    if (area) areaOption['name'] = area;
     const options = {
       where: {
         AND: [
-          { category: { name: category } },
-          { area: { name: area } },
+          { category: categoryOption },
+          { area: areaOption },
           { eventDetail: { eventStatus: { isNot: { code: 3 } } } },
         ],
       },
@@ -90,6 +118,7 @@ export class EventsService {
   }
 
   async searchEventsForMap(category: string, la: number, lo: number) {
+    category == '전체' ? undefined : category;
     const eventsWithDistance = (await this.prismaService.$queryRaw`
       SELECT "Event".id, "Event"."venueId",
         COALESCE(AVG("Review".rating), 0) AS averageRating,
@@ -103,7 +132,9 @@ export class EventsService {
       JOIN "EventDetail" ON "EventDetail"."eventId" = "Event".id
       JOIN "EventStatus" ON "EventStatus".code = "EventDetail"."eventStatusCode"
       LEFT JOIN "Review" ON "Review"."eventId" = "Event".id
-      WHERE "EventStatus"."name" <> '마감' AND "Category"."name"= ${category}
+      WHERE "EventStatus"."name" <> '마감' ${
+        category ? Prisma.sql`AND "Category"."name = ${category}` : Prisma.empty
+      }
       GROUP BY "Event".id, "Venue".id
       ORDER BY "distance"
       LIMIT 20

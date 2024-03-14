@@ -13,8 +13,18 @@ export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
   @Get()
-  getEventsByPage(@Query('page') page?: number) {
-    return this.eventsService.getEvents(page ? page : 1);
+  getEventsByPage(
+    @Query('category') category?: string,
+    @Query('area') area?: string,
+    @Query('orderBy') orderBy?: undefined | 'recent' | 'popular',
+    @Query('page') page?: number,
+  ) {
+    return this.eventsService.getEvents(
+      category,
+      area,
+      orderBy ? orderBy : 'recent',
+      page ? page : 1,
+    );
   }
 
   @Get('/home?')
@@ -25,7 +35,7 @@ export class EventsController {
   ) {
     return this.eventsService.getEventsForHome(
       category,
-      area ? area : '서울',
+      area,
       orderBy ? orderBy : 'recent',
     );
   }
@@ -55,7 +65,7 @@ export class EventsController {
     return this.eventsService.searchEvents(
       keywords ? keywords : ' ',
       category,
-      area ? area : '서울',
+      area,
       orderBy ? orderBy : 'recent',
       page ? page : 1,
     );
