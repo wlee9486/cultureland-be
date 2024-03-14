@@ -28,11 +28,13 @@ export class EventsService {
     }
     const categoryOption = {};
     if (category !== '전체') categoryOption['name'] = category;
+    const areaOption = {};
+    if (area) areaOption['name'] = area;
 
     const options = {
       AND: [
         { category: categoryOption },
-        { area: { name: area } },
+        { area: areaOption },
         { eventDetail: { eventStatus: { isNot: { code: 3 } } } },
       ],
     };
@@ -89,11 +91,13 @@ export class EventsService {
     }
     const categoryOption = {};
     if (category !== '전체') categoryOption['name'] = category;
+    const areaOption = {};
+    if (area) areaOption['name'] = area;
     const options = {
       where: {
         AND: [
           { category: categoryOption },
-          { area: { name: area } },
+          { area: areaOption },
           { eventDetail: { eventStatus: { isNot: { code: 3 } } } },
         ],
       },
@@ -114,7 +118,6 @@ export class EventsService {
   }
 
   async searchEventsForMap(category: string, la: number, lo: number) {
-    console.log(category);
     category == '전체' ? undefined : category;
     const eventsWithDistance = (await this.prismaService.$queryRaw`
       SELECT "Event".id, "Event"."venueId",
