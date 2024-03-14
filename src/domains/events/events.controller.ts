@@ -13,8 +13,18 @@ export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
   @Get()
-  getEventsByPage(@Query('page') page?: number) {
-    return this.eventsService.getEvents(page ? page : 1);
+  getEventsByPage(
+    @Query('category') category?: string,
+    @Query('area') area?: string,
+    @Query('orderBy') orderBy?: undefined | 'recent' | 'popular',
+    @Query('page') page?: number,
+  ) {
+    return this.eventsService.getEvents(
+      category,
+      area ? area : '서울',
+      orderBy ? orderBy : 'recent',
+      page ? page : 1,
+    );
   }
 
   @Get('/home?')

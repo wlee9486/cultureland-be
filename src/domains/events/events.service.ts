@@ -14,9 +14,30 @@ export class EventsService {
 
   pageSize = this.configService.getOrThrow<number>('PAGESIZE_EVENT_LIST');
 
-  async getEvents(page: number) {
+  async getEvents(
+    category,
+    area: string,
+    orderBy: 'recent' | 'popular',
+    page: number,
+  ) {
+    const orderOption = {};
+    if (orderBy == 'recent') {
+      orderOption['startDate'] = 'desc';
+    } else {
+      orderOption['interestedUsers'] = { _count: 'desc' };
+    }
+    const categoryOption = {};
+    if (category !== '전체') categoryOption['name'] = category;
+
+    const options = {
+      AND: [
+        { category: categoryOption },
+        { area: { name: area } },
+        { eventDetail: { eventStatus: { isNot: { code: 3 } } } },
+      ],
+    };
     const events = await this.prismaService.event.findMany({
-      where: {},
+      where: options,
       include: {
         venue: true,
         category: true,
@@ -28,7 +49,7 @@ export class EventsService {
       take: Number(this.pageSize),
     });
     const eventsCount = await this.prismaService.event.count({
-      where: {},
+      where: options,
     });
 
     const eventsWithAvgRating = await Promise.all(
