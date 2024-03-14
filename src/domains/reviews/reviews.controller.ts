@@ -8,14 +8,13 @@ import {
   Post,
   Put,
   Query,
-  Req,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { User } from '@prisma/client';
-import { Request } from 'express';
 import { Private } from 'src/decorators/private.decorator';
+import { DUser } from 'src/decorators/user.decorator';
 import {
   CreateReactionRequestDto,
   CreateReviewRequestDto,
@@ -32,53 +31,16 @@ export class ReviewsController {
   @Private('user')
   @UseInterceptors(FileInterceptor('image'))
   async createReview(
-    @Req() req: Request,
+    @DUser() user: User,
     @Body() dto: CreateReviewRequestDto,
     @UploadedFile() image?: Express.Multer.File,
   ) {
-    const user: User = req.user;
-
     return await this.reviewsService.createReview(user, dto, image);
   }
 
-  @Get(':reviewId')
-  @Private('user')
-  async getReview(
-    @Req() req: Request,
-    @Param('reviewId', ParseIntPipe)
-    reviewId: number,
-  ) {
-    const user: User = req.user;
-
-    return await this.reviewsService.getReview(user, reviewId);
-  }
-
-  @Put(':reviewId')
-  @Private('user')
-  @UseInterceptors(FileInterceptor('image'))
-  async updateReview(
-    @Req() req: Request,
-    @Param('reviewId', ParseIntPipe)
-    reviewId: number,
-    @Body()
-    dto: UpdateReviewRequestDto,
-    @UploadedFile() image?: Express.Multer.File,
-  ) {
-    const user: User = req.user;
-
-    return await this.reviewsService.updateReview(user, reviewId, dto, image);
-  }
-
-  @Delete(':reviewId')
-  @Private('user')
-  async deleteReview(
-    @Req() req: Request,
-    @Param('reviewId', ParseIntPipe)
-    reviewId: number,
-  ) {
-    const user: User = req.user;
-
-    return await this.reviewsService.deleteReview(user, reviewId);
+  @Get('famous')
+  async getFamousReviews() {
+    return await this.reviewsService.getFamousReviews();
   }
 
   @Get('users/:userId')
@@ -95,31 +57,56 @@ export class ReviewsController {
     return await this.reviewsService.getEventReviews(eventId, page, orderBy);
   }
 
+  @Get(':reviewId')
+  @Private('user')
+  async getReview(
+    @DUser() user: User,
+    @Param('reviewId', ParseIntPipe)
+    reviewId: number,
+  ) {
+    return await this.reviewsService.getReview(user, reviewId);
+  }
+
+  @Put(':reviewId')
+  @Private('user')
+  @UseInterceptors(FileInterceptor('image'))
+  async updateReview(
+    @DUser() user: User,
+    @Param('reviewId', ParseIntPipe)
+    reviewId: number,
+    @Body()
+    dto: UpdateReviewRequestDto,
+    @UploadedFile() image?: Express.Multer.File,
+  ) {
+    return await this.reviewsService.updateReview(user, reviewId, dto, image);
+  }
+
+  @Delete(':reviewId')
+  @Private('user')
+  async deleteReview(
+    @DUser() user: User,
+    @Param('reviewId', ParseIntPipe)
+    reviewId: number,
+  ) {
+    return await this.reviewsService.deleteReview(user, reviewId);
+  }
+
   @Post(':reviewId/reactions')
   @Private('user')
   async createReaction(
-    @Req() req: Request,
+    @DUser() user: User,
     @Param('reviewId', ParseIntPipe) reviewId: number,
     @Body() dto: CreateReactionRequestDto,
   ) {
-    const user: User = req.user;
-
     return await this.reviewsService.createReaction(user, reviewId, dto);
   }
 
   @Delete(':reviewId/reactions')
   @Private('user')
   async deleteReaction(
-    @Req() req: Request,
+    @DUser() user: User,
     @Param('reviewId', ParseIntPipe) reviewId: number,
   ) {
-    const user: User = req.user;
-
     return await this.reviewsService.deleteReaction(user, reviewId);
-  }
-
-  @Get('famous')
-  async getFamousReviews() {
-    return await this.reviewsService.getFamousReviews();
   }
 }
