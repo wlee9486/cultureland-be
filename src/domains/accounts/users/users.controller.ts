@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -135,6 +136,12 @@ export class UsersController {
     this.accountsService.setAccessTokenCookie(response, accessToken);
 
     return accessToken;
+  }
+
+  @Delete(':userId')
+  @Private('user')
+  async deleteUser(@DUser() user: User) {
+    return this.usersService.deleteUser(user);
   }
 
   @Get(':userId/attended-events')
