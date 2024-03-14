@@ -144,6 +144,16 @@ export class UsersService {
     return this.accountsService.generateAccessToken(userProfile, 'user');
   }
 
+  async deleteUser(user: User) {
+    await this.prismaService.user.delete({
+      where: {
+        id: user.id,
+      },
+    });
+
+    return user.id;
+  }
+
   async getAttendedEvents(userId: number) {
     const user = await this.prismaService.user.findUnique({
       where: { id: userId },
@@ -194,19 +204,6 @@ export class UsersService {
     const likedReviewsWithsReactionCounts = countReviewReactions(likedReviews);
 
     return likedReviewsWithsReactionCounts;
-  }
-
-  async deleteReaction(user: User, reviewId: number) {
-    await this.prismaService.reviewReaction.delete({
-      where: {
-        userId_reviewId: {
-          userId: user.id,
-          reviewId: reviewId,
-        },
-      },
-    });
-
-    return reviewId;
   }
 
   async getKakaoAccessToken(code: string) {
