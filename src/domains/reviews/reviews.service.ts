@@ -58,14 +58,12 @@ export class ReviewsService {
   }
 
   async getReview(user: User, reviewId: number) {
-    const review = await this.prismaService.review.findUnique({
-      where: { id: reviewId },
-    });
-    if (review.reviewerId !== user.id) {
+    const foundReview = await this.findUniqueReview(reviewId);
+    if (foundReview.reviewerId !== user.id) {
       throw new PermissionDeniedToReadReviewException();
     }
 
-    return review;
+    return foundReview;
   }
 
   async updateReview(
@@ -126,15 +124,25 @@ export class ReviewsService {
     return foundReview;
   }
 
-  async getUsersReviews(userId: number) {
+  async getUsersReviews(user: User, userId: number) {
     const reviews = await this.prismaService.review.findMany({
       where: { reviewerId: userId },
     });
 
-    return reviews;
+    const reviewsWithReviewer = reviews.map((review) => {
+      const isMe = user ? review.reviewerId === user.id : false;
+      return { ...review, isMe };
+    });
+
+    return reviewsWithReviewer;
   }
 
-  async getEventReviews(eventId: number, page: number, orderBy: SortOrder) {
+  async getEventReviews(
+    user: User,
+    eventId: number,
+    page: number,
+    orderBy: SortOrder,
+  ) {
     const pageSize = Number(
       this.configService.getOrThrow('PAGESIZE_REVIEW_DETAIL'),
     );
@@ -165,7 +173,12 @@ export class ReviewsService {
 
     const reviewsWithReactionCounts = countReviewReactions(reviews);
 
-    return this.sortReviews(orderBy, reviewsWithReactionCounts);
+    const reviewsWithReviewer = reviewsWithReactionCounts.map((review) => {
+      const isMe = user ? review.reviewerId === user.id : false;
+      return { ...review, isMe };
+    });
+
+    return this.sortReviews(orderBy, reviewsWithReviewer);
   }
 
   sortReviews(orderBy: SortOrder, reviews: ReviewResponse[]) {
@@ -178,7 +191,7 @@ export class ReviewsService {
     }
   }
 
-  async getFamousReviews() {
+  async getFamousReviews(user: User) {
     const listSize = Number(
       this.configService.getOrThrow('LISTSIZE_REVIEW_FAMOUS'),
     );
@@ -196,6 +209,7 @@ export class ReviewsService {
           reactionValue: 'desc',
         },
       },
+
       take: listSize,
     });
 
@@ -221,8 +235,14 @@ export class ReviewsService {
         },
       },
     });
+    const reviewsWithReactionCounts = countReviewReactions(reviews);
 
-    return reviews;
+    const reviewsWithReviewer = reviewsWithReactionCounts.map((review) => {
+      const isMe = user ? review.reviewerId === user.id : false;
+      return { ...review, isMe };
+    });
+
+    return reviewsWithReviewer;
   }
 
   async createReaction(

@@ -39,22 +39,34 @@ export class ReviewsController {
   }
 
   @Get('famous')
-  async getFamousReviews() {
-    return await this.reviewsService.getFamousReviews();
+  @Private('user', 'guest')
+  async getFamousReviews(@DUser() user: User) {
+    return await this.reviewsService.getFamousReviews(user);
   }
 
   @Get('users/:userId')
-  async getUsersReviews(@Param('userId', ParseIntPipe) userId: number) {
-    return await this.reviewsService.getUsersReviews(userId);
+  @Private('user', 'guest')
+  async getUsersReviews(
+    @DUser() user: User,
+    @Param('userId', ParseIntPipe) userId: number,
+  ) {
+    return await this.reviewsService.getUsersReviews(user, userId);
   }
 
   @Get('events/:eventId')
+  @Private('user', 'guest')
   async getEventReviews(
+    @DUser() user: User,
     @Param('eventId', ParseIntPipe) eventId: number,
     @Query('page', ParseIntPipe) page: number,
     @Query('orderBy') orderBy?: SortOrder,
   ) {
-    return await this.reviewsService.getEventReviews(eventId, page, orderBy);
+    return await this.reviewsService.getEventReviews(
+      user,
+      eventId,
+      page,
+      orderBy,
+    );
   }
 
   @Get(':reviewId')
