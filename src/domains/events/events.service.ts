@@ -191,7 +191,10 @@ export class EventsService {
         { category: { name: { search: searchKey } } },
         { area: { name: { search: searchKey } } },
       ],
-      AND: [{ category: { name: category } }, { area: { name: area } }],
+      AND: [
+        { category: { name: category === '전체' ? undefined : category } },
+        { area: { name: area } },
+      ],
     };
     const events = await this.prismaService.event.findMany({
       where: options,
