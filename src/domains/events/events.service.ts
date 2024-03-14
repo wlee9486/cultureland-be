@@ -128,7 +128,7 @@ export class EventsService {
         ) AS distance
       FROM "Event"
       JOIN "Category" ON "Category"."code" = "Event"."categoryCode"
-      JOIN "Venue" ON "Venue".id = "Event"."venueId"
+      JOIN "Venue" ON "Venue".id = "Event"."venueId" 
       JOIN "EventDetail" ON "EventDetail"."eventId" = "Event".id
       JOIN "EventStatus" ON "EventStatus".code = "EventDetail"."eventStatusCode"
       LEFT JOIN "Review" ON "Review"."eventId" = "Event".id
@@ -160,7 +160,7 @@ export class EventsService {
 
     const result = events.map((event) => {
       const eventWithDistance = eventsWithDistance.find(
-        (event) => event.id === event.id,
+        (_event) => event.id === _event.id,
       );
       return { ...event, ...eventWithDistance };
     });
