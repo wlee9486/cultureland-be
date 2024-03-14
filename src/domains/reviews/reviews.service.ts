@@ -221,6 +221,14 @@ export class ReviewsService {
         id: true,
         reviewerId: true,
         eventId: true,
+        reviewer: {
+          select: {
+            id: true,
+            userProfile: {
+              select: { nickname: true, profileImage: true },
+            },
+          },
+        },
         event: {
           select: {
             id: true,
