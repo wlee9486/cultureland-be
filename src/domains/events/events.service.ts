@@ -133,7 +133,7 @@ export class EventsService {
       JOIN "EventStatus" ON "EventStatus".code = "EventDetail"."eventStatusCode"
       LEFT JOIN "Review" ON "Review"."eventId" = "Event".id
       WHERE "EventStatus"."name" <> '마감' ${
-        category ? Prisma.sql`AND "Category"."name = ${category}` : Prisma.empty
+        category ? Prisma.sql`AND "Category".name = ${category}` : Prisma.empty
       }
       GROUP BY "Event".id, "Venue".id
       ORDER BY "distance"
