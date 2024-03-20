@@ -27,16 +27,12 @@ export class EventsService {
       orderOption['interestedUsers'] = { _count: 'desc' };
     }
     const categoryOption = {};
-    if (category !== '전체') categoryOption['name'] = category;
+    if (category && category !== '전체') categoryOption['name'] = category;
     const areaOption = {};
     if (area) areaOption['name'] = area;
 
     const options = {
-      AND: [
-        { category: categoryOption },
-        { area: areaOption },
-        { eventDetail: { eventStatus: { isNot: { code: 3 } } } },
-      ],
+      AND: [{ category: categoryOption }, { area: areaOption }],
     };
     const events = await this.prismaService.event.findMany({
       where: options,
