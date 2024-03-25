@@ -30,13 +30,13 @@ export class ReviewsService {
     const { eventId, rating, content } = dto;
     const userId = user.id;
 
-    const existedReview = this.prismaService.review.count({
+    const existedReview = await this.prismaService.review.count({
       where: {
         reviewerId: userId,
         eventId: Number(eventId),
       },
     });
-
+    console.log(existedReview);
     if (existedReview) throw new DuplicatedReviewException();
 
     let image;
