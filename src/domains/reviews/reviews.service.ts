@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { User } from '@prisma/client';
 import uploadImageToS3 from 'src/aws/uploadImageToS3';
 import { PrismaService } from 'src/db/prisma/prisma.service';
+import { DuplicatedReviewException } from 'src/exceptions/DuplicatedReview.excpetion';
 import { PermissionDeniedToEditReviewException } from 'src/exceptions/PermissionDeniedToEditReview.exception';
 import { PermissionDeniedToReadReviewException } from 'src/exceptions/PermissionDeniedToReadReview.exception';
 import { ReviewNotFoundById } from 'src/exceptions/ReviewNotFoundById.exception';
@@ -28,6 +29,15 @@ export class ReviewsService {
   ) {
     const { eventId, rating, content } = dto;
     const userId = user.id;
+
+    const existedReview = this.prismaService.review.count({
+      where: {
+        reviewerId: userId,
+        eventId: Number(eventId),
+      },
+    });
+
+    if (existedReview) throw new DuplicatedReviewException();
 
     let image;
     if (imageFile) {
