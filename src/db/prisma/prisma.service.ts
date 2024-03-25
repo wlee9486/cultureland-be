@@ -22,7 +22,6 @@ export const prismaExtendedClient = (prismaClient: PrismaClient) =>
 
           return;
         },
-
         findUnique({ args, query }) {
           args.where = { ...args.where, deletedAt: null };
           return query(args);
@@ -40,6 +39,16 @@ export const prismaExtendedClient = (prismaClient: PrismaClient) =>
           });
 
           return;
+        },
+
+        findUnique({ args, query }) {
+          args.where = { ...args.where, deletedAt: null };
+          return query(args);
+        },
+
+        findMany({ args, query }) {
+          args.where = { ...args.where, deletedAt: null };
+          return query(args);
         },
       },
     },
