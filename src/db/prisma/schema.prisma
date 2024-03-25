@@ -86,8 +86,6 @@ model Review {
   event           Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
   reviewer        User             @relation(fields: [reviewerId], references: [id])
   reviewReactions ReviewReaction[]
-
-  @@unique([reviewerId, eventId])
 }
 
 model UserAttendedEvents {

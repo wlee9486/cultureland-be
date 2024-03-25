@@ -34,6 +34,7 @@ export class ReviewsService {
       where: {
         reviewerId: userId,
         eventId: Number(eventId),
+        deletedAt: null,
       },
     });
     console.log(existedReview);
