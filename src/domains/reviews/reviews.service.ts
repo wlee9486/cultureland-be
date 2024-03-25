@@ -129,7 +129,7 @@ export class ReviewsService {
 
   async findUniqueReview(reviewId: number) {
     const foundReview = await this.prismaService.review.findUnique({
-      where: { id: reviewId },
+      where: { id: reviewId, deletedAt: null },
     });
 
     return foundReview;
@@ -137,7 +137,7 @@ export class ReviewsService {
 
   async getUsersReviews(user: User, userId: number) {
     const reviews = await this.prismaService.review.findMany({
-      where: { reviewerId: userId },
+      where: { reviewerId: userId, deletedAt: null },
     });
 
     const reviewsWithReviewer = reviews.map((review) => {
@@ -159,7 +159,7 @@ export class ReviewsService {
     );
 
     const reviews = await this.prismaService.review.findMany({
-      where: { eventId },
+      where: { eventId, deletedAt: null },
       select: {
         id: true,
         reviewerId: true,
@@ -211,6 +211,7 @@ export class ReviewsService {
       by: ['reviewId'],
       where: {
         reactionValue: 1,
+        deletedAt: null,
       },
       _count: {
         reactionValue: true,
@@ -227,7 +228,7 @@ export class ReviewsService {
     const reviewIds = reactions.map((reaction) => reaction.reviewId);
 
     const reviews = await this.prismaService.review.findMany({
-      where: { id: { in: reviewIds } },
+      where: { id: { in: reviewIds }, deletedAt: null },
       select: {
         id: true,
         reviewerId: true,
