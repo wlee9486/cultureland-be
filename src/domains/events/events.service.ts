@@ -58,6 +58,7 @@ export class EventsService {
           },
           where: {
             eventId: event.id,
+            deletedAt: null,
           },
         });
         return {
@@ -127,7 +128,7 @@ export class EventsService {
       JOIN "Venue" ON "Venue".id = "Event"."venueId" 
       JOIN "EventDetail" ON "EventDetail"."eventId" = "Event".id
       JOIN "EventStatus" ON "EventStatus".code = "EventDetail"."eventStatusCode"
-      LEFT JOIN "Review" ON "Review"."eventId" = "Event".id
+      LEFT JOIN "Review" ON "Review"."eventId" = "Event".id AND "Review"."deletedAt" IS NULL
       WHERE "EventStatus"."name" <> '마감' ${
         category ? Prisma.sql`AND "Category".name = ${category}` : Prisma.empty
       }
@@ -150,9 +151,18 @@ export class EventsService {
         title: true,
         venue: { select: { name: true, latitude: true, longitude: true } },
         category: { select: { name: true } },
-        _count: { select: { reviews: true } },
+        _count: {
+          select: {
+            reviews: {
+              where: {
+                deletedAt: null,
+              },
+            },
+          },
+        },
       },
     });
+    console.log(events);
 
     const result = events.map((event) => {
       const eventWithDistance = eventsWithDistance.find(
@@ -216,6 +226,7 @@ export class EventsService {
           },
           where: {
             eventId: event.id,
+            deletedAt: null,
           },
         });
         return {
@@ -237,7 +248,7 @@ export class EventsService {
       where: { eventDetail: { eventStatus: { isNot: { code: 3 } } } },
       include: {
         area: true,
-        reviews: true,
+        reviews: { where: { deletedAt: null } },
         _count: true,
       },
       orderBy: { interestedUsers: { _count: 'desc' } },
@@ -252,6 +263,7 @@ export class EventsService {
           },
           where: {
             eventId: event.id,
+            deletedAt: null,
           },
         });
         return {
@@ -295,11 +307,16 @@ export class EventsService {
             reviews: {
               where: {
                 eventId: eventId,
+                deletedAt: null,
               },
             },
           },
         },
-        reviews: true,
+        reviews: {
+          where: {
+            deletedAt: null,
+          },
+        },
       },
     });
     if (!foundEvent) throw new EventNotFoundByIdException();
